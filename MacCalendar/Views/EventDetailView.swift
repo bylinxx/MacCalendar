@@ -32,6 +32,22 @@ struct EventDetailView: View {
                         }
                     }
                 }
+                
+                Spacer()
+                
+//                Button(action:{
+//                    AppDelegate.shared?.openEventEditWindow(with: event)
+//                }){
+//                    Image(systemName: "square.and.pencil")
+//                        .foregroundStyle(.blue)
+//                }
+//                
+//                Button(action:{
+//                    
+//                }){
+//                    Image(systemName: "trash")
+//                        .foregroundStyle(.red)
+//                }
             }
             .font(.subheadline)
             .foregroundColor(.secondary)
@@ -65,6 +81,6 @@ struct EventDetailView: View {
             }
         }
         .padding()
-        .frame(width:300)
+        .frame(width:350)
     }
 }

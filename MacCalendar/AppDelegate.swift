@@ -10,14 +10,20 @@ import AppKit
 import Combine
 
 class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
+    static var shared:AppDelegate?
+    
     var statusItem: NSStatusItem!
     var popover: NSPopover!
     var settingsWindow: NSWindow?
+    var eventEditWindow:NSWindow?
+    var calendarManager = CalendarManager()
     
     private var calendarIcon = CalendarIcon()
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        AppDelegate.shared = self
+        
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem.button {
@@ -39,7 +45,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
                     .sink { [weak self] output in
                         guard let button = self?.statusItem.button else { return }
                         
-                        if output == CalendarIcon.iconModeIdentifier {
+                        if output == "" {
                             button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")
                             button.title = ""
                         } else {
@@ -78,7 +84,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             if popover.isShown {
                 popover.performClose(nil)
             } else {
-                let hostingController = NSHostingController(rootView: ContentView())
+                calendarManager.resetToToday()
+                let hostingController = FocusableHostingController(rootView: ContentView().environmentObject(calendarManager))
                 hostingController.sizingOptions = .intrinsicContentSize
                 popover.contentViewController = hostingController
                 
@@ -94,7 +101,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     
     @objc func showSettingsWindow() {
         if settingsWindow == nil {
-            let settingsView = SettingsView()
+            let settingsView = SettingsView().environmentObject(calendarManager)
             
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 420, height: 300),
@@ -110,5 +117,30 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         
         NSApp.activate(ignoringOtherApps: true)
         settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+    
+    func openEventEditWindow(with parameter: CalendarEvent) {
+        if let existingWindow = eventEditWindow {
+            existingWindow.close()
+        }
+        
+        let contentView = EventEditView(event: parameter).environmentObject(calendarManager)
+        
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        
+        window.delegate = self
+        window.title = "编辑事件"
+        window.center()
+        window.contentView = NSHostingView(rootView: contentView)
+        window.makeKeyAndOrderFront(nil)
+        
+        NSApp.activate(ignoringOtherApps: true)
+        
+        self.eventEditWindow = window
     }
 }

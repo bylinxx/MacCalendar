@@ -7,22 +7,26 @@
 
 import SwiftUI
 
-struct CalendarEvent:Identifiable,Hashable {
+struct CalendarEvent:Identifiable,Hashable,Codable {
     let id:String
+    /// 日历标题
+    let calendar_title:String?
+    /// 是否允许修改
+    let allowsModify:Bool?
     /// 标题
-    let title: String
+    var title: String
     /// 位置
     let location:String?
     /// 是否全天
-    let isAllDay:Bool
+    var isAllDay:Bool
     /// 开始时间
-    let startDate: Date
+    var startDate: Date
     /// 结束时间
-    let endDate: Date
+    var endDate: Date
     /// 颜色
     let color:Color
     /// 备注
-    let notes:String?
+    var notes:String?
     /// 链接地址
-    let url:URL?
+    var url:URL?
 }

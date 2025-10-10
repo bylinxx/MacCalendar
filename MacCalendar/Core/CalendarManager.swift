@@ -11,8 +11,9 @@ import EventKit
 
 @MainActor
 class CalendarManager: ObservableObject {
-    @Published var currentMonth: Date = Date()
-    @Published var days: [CalendarDay] = []
+    @Published var calendarDays: [CalendarDay] = []
+    @Published var calendarInfos: [CalendarInfo] = []
+    @Published var selectedMonth: Date = Date()
     @Published var selectedDay: Date = Date()
     @Published var selectedDayEvents: [CalendarEvent] = []
     @Published var authorizationStatus: EKAuthorizationStatus = .notDetermined
@@ -20,59 +21,71 @@ class CalendarManager: ObservableObject {
     private let calendar = Calendar.mondayBased
     private let eventStore = EKEventStore()
     private var cancellables = Set<AnyCancellable>()
-
+    
     init() {
-        // 在初始化时，使用 Task 启动异步加载
         Task {
-            await loadMonth(date: currentMonth)
-            // 默认选中今天并加载事件
-            getEvent(date: Date())
+            await loadCalendarDays(date: selectedMonth)
+            
+            getSelectedDayEvents(date: Date())
+            
+            await loadCalendarInfo()
         }
         // 订阅日历数据库变化的通知
         subscribeToCalendarChanges()
+        
+        $calendarInfos
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.setFilterCalendarIds()
+            }
+            .store(in: &cancellables)
+    }
+    
+    func resetToToday() {
+        if !calendar.isDate(selectedMonth, equalTo: Date(), toGranularity: .month) {
+            goToCurrentMonth()
+        }
+        getSelectedDayEvents(date: Date())
     }
     
     func goToCurrentMonth(){
-        currentMonth = Date()
-        Task { await loadMonth(date: currentMonth) }
+        selectedMonth = Date()
+        Task { await loadCalendarDays(date: selectedMonth) }
     }
     
     func goToNextMonth() {
-        if let nextMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) {
-            currentMonth = nextMonth
-            Task { await loadMonth(date: currentMonth) }
-        }
-    }
-
-    func goToPreviousMonth() {
-        if let prevMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) {
-            currentMonth = prevMonth
-            Task { await loadMonth(date: currentMonth) }
+        if let nextMonth = calendar.date(byAdding: .month, value: 1, to: selectedMonth) {
+            selectedMonth = nextMonth
+            Task { await loadCalendarDays(date: selectedMonth) }
         }
     }
     
-    func getEvent(date: Date) {
+    func goToPreviousMonth() {
+        if let prevMonth = calendar.date(byAdding: .month, value: -1, to: selectedMonth) {
+            selectedMonth = prevMonth
+            Task { await loadCalendarDays(date: selectedMonth) }
+        }
+    }
+    
+    func getSelectedDayEvents(date: Date) {
         selectedDay = date
-        if let day = days.first(where: { Calendar.mondayBased.isDate($0.date, inSameDayAs: date) }) {
+        if let day = calendarDays.first(where: { Calendar.mondayBased.isDate($0.date, inSameDayAs: date) }) {
             selectedDayEvents = day.events
         } else {
             selectedDayEvents = []
         }
     }
     
-    // 重新加载数据
     func refreshEvents() {
         Task {
-            await loadMonth(date: currentMonth)
-            getEvent(date: selectedDay)
+            await loadCalendarDays(date: selectedMonth)
+            getSelectedDayEvents(date: selectedDay)
         }
     }
-
-    // 加载月份数据
-    func loadMonth(date: Date) async {
+    
+    func loadCalendarDays(date: Date) async {
         await requestAccess()
         
-        // 如果权限不是 fullAccess，则直接生成不带事件的日历
         guard authorizationStatus == .fullAccess else {
             print("日历权限未授予，仅显示日期。")
             generateCalendarGrid(for: date, events: [:])
@@ -85,30 +98,46 @@ class CalendarManager: ObservableObject {
             return
         }
         
-        // 异步获取这个范围内的所有事件
-        let events = await fetchEvents(from: firstDate, to: lastDate)
+        let events = await getEventsByDate(from: firstDate, to: lastDate)
         
-        // 将事件按天分组
         let groupedEvents = groupEventsByDay(events: events)
         
-        // 使用分组后的事件生成最终的日历网格
         generateCalendarGrid(for: date, events: groupedEvents)
     }
-
-    // 订阅日历数据库变化的通知
+    
+    func loadCalendarInfo() async {
+        if authorizationStatus == .notDetermined { await requestAccess() }
+        guard authorizationStatus == .fullAccess else { return }
+        
+        let allEKCalendars = eventStore.calendars(for: .event)
+        
+        let effectiveIDs = getFilterCalendarIds() ?? Set(allEKCalendars.map { $0.calendarIdentifier })
+        
+        let calendarInfos = allEKCalendars.map { calendar in
+            CalendarInfo(
+                id: calendar.calendarIdentifier,
+                title: calendar.title,
+                color: Color(calendar.cgColor),
+                isSelected: effectiveIDs.contains(calendar.calendarIdentifier)
+            )
+        }
+        
+        self.calendarInfos = calendarInfos.sorted { $0.title < $1.title }
+    }
+    
+    // MARK: 私有辅助类
+    
     private func subscribeToCalendarChanges() {
         NotificationCenter.default
             .publisher(for: .EKEventStoreChanged, object: eventStore)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                print("检测到日历数据库发生变化，正在刷新...")
+                print("日程数据发生变化")
                 self?.refreshEvents()
             }
-            // 将订阅存起来，以便在销毁时自动取消
             .store(in: &cancellables)
     }
     
-    // 请求日历访问权限
     private func requestAccess() async {
         do {
             let granted = try await eventStore.requestFullAccessToEvents()
@@ -119,18 +148,26 @@ class CalendarManager: ObservableObject {
         }
         
         if authorizationStatus == .notDetermined {
-             authorizationStatus = EKEventStore.authorizationStatus(for: .event)
+            authorizationStatus = EKEventStore.authorizationStatus(for: .event)
         }
     }
     
-    // 获取指定时间范围内的所有事件
-    private func fetchEvents(from startDate: Date, to endDate: Date) async -> [CalendarEvent] {
-        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: nil)
+    private func getEventsByDate(from startDate: Date, to endDate: Date) async -> [CalendarEvent] {
+        var calendarsToFetch: [EKCalendar]? = nil
+        
+        if let ids = getFilterCalendarIds() {
+            let allCalendars = eventStore.calendars(for: .event)
+            calendarsToFetch = allCalendars.filter { ids.contains($0.calendarIdentifier) }
+        }
+        
+        let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendarsToFetch)
         let ekEvents = eventStore.events(matching: predicate)
         
         return ekEvents.map { ekEvent in
             CalendarEvent(
                 id: ekEvent.eventIdentifier,
+                calendar_title: ekEvent.calendar.title,
+                allowsModify: ekEvent.calendar.allowsContentModifications,
                 title: ekEvent.title,
                 location:ekEvent.location,
                 isAllDay: ekEvent.isAllDay,
@@ -143,7 +180,26 @@ class CalendarManager: ObservableObject {
         }
     }
     
-    // 将事件按日期（天）进行分组
+    private func setFilterCalendarIds() {
+        let selectedIDs = calendarInfos.filter { $0.isSelected }.map { $0.id }
+        
+        if let data = try? JSONEncoder().encode(selectedIDs) {
+            SettingsManager.filterCalendar = data
+        }
+        
+        refreshEvents()
+    }
+    
+    private func getFilterCalendarIds() -> Set<String>? {
+        if let decodedIDs = try? JSONDecoder().decode([String].self, from: SettingsManager.filterCalendar) {
+            if SettingsManager.filterCalendar.isEmpty {
+                return nil
+            }
+            return Set(decodedIDs)
+        }
+        return nil
+    }
+    
     private func groupEventsByDay(events: [CalendarEvent]) -> [Date: [CalendarEvent]] {
         var groupedEvents = [Date: [CalendarEvent]]()
         for event in events {
@@ -153,7 +209,6 @@ class CalendarManager: ObservableObject {
         return groupedEvents
     }
     
-    // 仅生成日期网格，不处理事件
     private func generateDateGrid(for date: Date) -> [Date]? {
         guard let monthInterval = calendar.dateInterval(of: .month, for: date) else { return nil }
         
@@ -192,13 +247,12 @@ class CalendarManager: ObservableObject {
         
         return gridDates
     }
-
-    // 根据日期网格和事件字典，生成最终的 [CalendarDay]
+    
     private func generateCalendarGrid(for date: Date, events: [Date: [CalendarEvent]]) {
         let lunarCalendar = Calendar(identifier: .chinese)
         let lunarMonthSymbols = ["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"]
         let lunarDaySymbols = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十", "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十", "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"]
-
+        
         guard let gridDates = generateDateGrid(for: date) else { return }
         
         var newDays: [CalendarDay] = []
@@ -215,10 +269,10 @@ class CalendarManager: ObservableObject {
             let solar_term = SolarTermHelper.getSolarTerm(for: day)
             
             let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay)
-
+            
             newDays.append(CalendarDay(date: day, lunar_short: lunar_short,lunar_full: lunar_full,holidays: holidays,solar_term: solar_term , events: dayEvents))
         }
-
-        self.days = newDays
+        
+        self.calendarDays = newDays
     }
 }

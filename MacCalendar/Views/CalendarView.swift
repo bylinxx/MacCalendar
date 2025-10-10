@@ -24,7 +24,7 @@ struct CalendarView: View {
                         calendarManager.goToPreviousMonth()
                     }
                 Spacer()
-                Text(ConvertTitle(date: calendarManager.currentMonth))
+                Text(ConvertTitle(date: calendarManager.selectedMonth))
                     .onTapGesture {
                         calendarManager.goToCurrentMonth()
                     }
@@ -49,8 +49,8 @@ struct CalendarView: View {
                 }
             
             LazyVGrid(columns: columns, spacing: 0) {
-                ForEach(calendarManager.days, id: \.self) { day in
-                    let isCurrentMonth = calendar.isDate(day.date, equalTo: calendarManager.currentMonth, toGranularity: .month)
+                ForEach(calendarManager.calendarDays, id: \.self) { day in
+                    let isCurrentMonth = calendar.isDate(day.date, equalTo: calendarManager.selectedMonth, toGranularity: .month)
                     let isToday = calendar.isDateInToday(day.date)
                     
                     ZStack{
@@ -85,7 +85,7 @@ struct CalendarView: View {
                     }
                     .contentShape(Circle())
                     .onTapGesture {
-                        calendarManager.getEvent(date: day.date)
+                        calendarManager.getSelectedDayEvents(date: day.date)
                     }
                 }
             }

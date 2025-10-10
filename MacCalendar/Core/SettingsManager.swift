@@ -21,5 +21,6 @@ enum DisplayMode: String, CaseIterable, Identifiable {
 struct SettingsManager {
     @AppStorage("displayMode") static var displayMode: DisplayMode = .icon
     @AppStorage("customFormatString") static var customFormatString: String = "yyyy-MM-dd"
+    @AppStorage("filterCalendar") static var filterCalendar: Data = Data()
     @AppStorage("launchAtLogin") private var launchAtLogin = false
 }

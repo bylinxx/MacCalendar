@@ -11,8 +11,6 @@ import Combine
 class CalendarIcon: ObservableObject {
     @Published var displayOutput: String = ""
     
-    static let iconModeIdentifier = "show_icon_mode"
-    
     private var timer: Timer?
     private let dateFormatter = DateFormatter()
 
@@ -28,7 +26,7 @@ class CalendarIcon: ObservableObject {
         
         switch SettingsManager.displayMode {
         case .icon:
-            displayOutput = Self.iconModeIdentifier
+            displayOutput = ""
         case .date:
             dateFormatter.dateStyle = .medium
             dateFormatter.timeStyle = .none
