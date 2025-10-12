@@ -8,7 +8,13 @@
 import SwiftUI
 
 struct EventDetailView: View {
+    @EnvironmentObject var calendarManager: CalendarManager
+    
     let event:CalendarEvent
+    
+    @State private var showingDeleteConfirmation = false
+    @State private var showingDeleteError = false
+    @State private var deleteErrorMessage = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -35,19 +41,19 @@ struct EventDetailView: View {
                 
                 Spacer()
                 
-//                Button(action:{
-//                    AppDelegate.shared?.openEventEditWindow(with: event)
-//                }){
-//                    Image(systemName: "square.and.pencil")
-//                        .foregroundStyle(.blue)
-//                }
-//                
-//                Button(action:{
-//                    
-//                }){
-//                    Image(systemName: "trash")
-//                        .foregroundStyle(.red)
-//                }
+                Button(action:{
+                    AppDelegate.shared?.openEventEditWindow(with: event)
+                }){
+                    Image(systemName: "square.and.pencil")
+                        .foregroundStyle(.blue)
+                }
+                
+                Button(action:{
+                    showingDeleteConfirmation = true
+                }){
+                    Image(systemName: "trash")
+                        .foregroundStyle(.red)
+                }
             }
             .font(.subheadline)
             .foregroundColor(.secondary)
@@ -71,7 +77,7 @@ struct EventDetailView: View {
                     .frame(minHeight:50,alignment: .topLeading)
             }
             .frame(maxHeight: 500)
-                        
+            
             if let event_url = event.url{
                 let url = UrlHelper.normalizeURL(from: event_url)
                 HStack{
@@ -82,5 +88,25 @@ struct EventDetailView: View {
         }
         .padding()
         .frame(width:350)
+        .alert("确认删除", isPresented: $showingDeleteConfirmation) {
+            Button("删除", role: .destructive) {
+                Task {
+                    do {
+                        try await calendarManager.deleteEvent(withId: event.id)
+                    } catch {
+                        deleteErrorMessage = error.localizedDescription
+                        showingDeleteError = true
+                    }
+                }
+            }
+            Button("取消", role: .cancel) { }
+        } message: {
+            Text("确定要删除事件“\(event.title)”吗？此操作无法撤销。")
+        }
+        .alert("删除失败", isPresented: $showingDeleteError) {
+                    Button("好的", role: .cancel) {}
+        } message: {
+            Text(deleteErrorMessage)
+        }
     }
 }
