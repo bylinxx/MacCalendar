@@ -159,6 +159,9 @@ class CalendarManager: ObservableObject {
             let allCalendars = eventStore.calendars(for: .event)
             calendarsToFetch = allCalendars.filter { ids.contains($0.calendarIdentifier) }
         }
+        if calendarsToFetch == nil || calendarsToFetch!.isEmpty{
+            return []
+        }
         
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendarsToFetch)
         let ekEvents = eventStore.events(matching: predicate)
