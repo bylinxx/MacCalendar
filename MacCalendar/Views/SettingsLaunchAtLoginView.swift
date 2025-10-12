@@ -14,7 +14,6 @@ struct SettingsLaunchAtLoginView: View {
         VStack{
             Toggle("开机时自动启动", isOn: $launchAtLogin)
                 .onChange(of: launchAtLogin) { oldValue, newValue in
-                    print("设置开机启动为: \(newValue)")
                     LaunchAtLoginManager.setLaunchAtLogin(enabled: newValue)
                 }
             

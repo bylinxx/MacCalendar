@@ -125,6 +125,56 @@ class CalendarManager: ObservableObject {
         self.calendarInfos = calendarInfos.sorted { $0.title < $1.title }
     }
     
+    func updateEvent(event: CalendarEvent) async throws {
+        guard authorizationStatus == .fullAccess else {
+            throw CalendarError.noPermission
+        }
+        
+        guard let ekEvent = eventStore.event(withIdentifier: event.id) else {
+            throw CalendarError.eventNotFound
+        }
+        
+        guard ekEvent.calendar.allowsContentModifications else {
+            throw CalendarError.calendarNotModifiable
+        }
+        
+        ekEvent.title = event.title
+        ekEvent.startDate = event.startDate
+        ekEvent.endDate = event.endDate
+        ekEvent.isAllDay = event.isAllDay
+        ekEvent.location = event.location
+        ekEvent.notes = event.notes
+        ekEvent.url = event.url
+        
+        do {
+            try eventStore.save(ekEvent, span: .thisEvent, commit: true)
+            refreshEvents()
+        } catch {
+            throw CalendarError.catchError(error)
+        }
+    }
+    
+    func deleteEvent(withId eventId: String) async throws {
+        guard authorizationStatus == .fullAccess else {
+            throw CalendarError.noPermission
+        }
+        
+        guard let ekEvent = eventStore.event(withIdentifier: eventId) else {
+            throw CalendarError.eventNotFound
+        }
+        
+        guard ekEvent.calendar.allowsContentModifications else {
+            throw CalendarError.calendarNotModifiable
+        }
+        
+        do {
+            try eventStore.remove(ekEvent, span: .thisEvent, commit: true)
+            refreshEvents()
+        } catch {
+            throw CalendarError.catchError(error)
+        }
+    }
+    
     // MARK: 私有辅助类
     
     private func subscribeToCalendarChanges() {
@@ -132,7 +182,6 @@ class CalendarManager: ObservableObject {
             .publisher(for: .EKEventStoreChanged, object: eventStore)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                print("日程数据发生变化")
                 self?.refreshEvents()
             }
             .store(in: &cancellables)
@@ -176,7 +225,7 @@ class CalendarManager: ObservableObject {
                 isAllDay: ekEvent.isAllDay,
                 startDate: ekEvent.startDate,
                 endDate: ekEvent.endDate,
-                color: Color(nsColor: ekEvent.calendar.color),
+                color: CodableColor(color: Color(nsColor: ekEvent.calendar.color)),
                 notes: ekEvent.notes,
                 url: ekEvent.url
             )

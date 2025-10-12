@@ -78,7 +78,7 @@ struct CalendarView: View {
                             .contentShape(Rectangle())
                         if !day.events.isEmpty {
                             Circle()
-                                .fill(day.events.first!.color)
+                                .fill(day.events.first!.color.color)
                                 .frame(width: 5, height: 5)
                                 .offset(y:15)
                         }
