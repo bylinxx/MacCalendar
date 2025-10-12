@@ -9,7 +9,7 @@ import Foundation
 
 
 struct DateHelper{
-    static func formatDate(date: Date, format: String, localeIdentifier: String = "yyyy-MM-dd") -> String {
+    static func formatDate(date: Date, format: String, localeIdentifier: String = Locale.current.identifier) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = format
         formatter.locale = Locale(identifier: localeIdentifier)
