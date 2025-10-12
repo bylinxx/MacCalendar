@@ -15,6 +15,7 @@ class CalendarManager: ObservableObject {
     @Published var calendarInfos: [CalendarInfo] = []
     @Published var selectedMonth: Date = Date()
     @Published var selectedDay: Date = Date()
+    @Published var selectedDayLunar:String = ""
     @Published var selectedDayEvents: [CalendarEvent] = []
     @Published var authorizationStatus: EKAuthorizationStatus = .notDetermined
     
@@ -69,6 +70,12 @@ class CalendarManager: ObservableObject {
     
     func getSelectedDayEvents(date: Date) {
         selectedDay = date
+        if let day = calendarDays.first(where: { Calendar.mondayBased.isDate($0.date, inSameDayAs: date) }) {
+            selectedDayLunar = day.full_lunar ?? ""
+        } else {
+            selectedDayLunar = ""
+        }
+        
         if let day = calendarDays.first(where: { Calendar.mondayBased.isDate($0.date, inSameDayAs: date) }) {
             selectedDayEvents = day.events
         } else {
@@ -310,10 +317,14 @@ class CalendarManager: ObservableObject {
         var newDays: [CalendarDay] = []
         
         for day in gridDates {
+            let lunarYear = lunarCalendar.component(.year, from: day)
             let lunarMonth = lunarCalendar.component(.month, from: day)
             let lunarDay = lunarCalendar.component(.day, from: day)
-            let lunar_short = (lunarDay == 1) ? lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
-            let lunar_full = lunarMonthSymbols[lunarMonth - 1] + lunarDaySymbols[lunarDay - 1]
+            
+            let ganzhiYear = LunarDateHelper.getGanzhiYear(for: day)
+            let zodiac = LunarDateHelper.getZodiac(for: day)
+            let short_lunar = (lunarDay == 1) ? lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
+            let full_lunar = "\(ganzhiYear)年 (\(zodiac)) \(lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
             
             let dayStart = calendar.startOfDay(for: day)
             let dayEvents = events[dayStart] ?? []
@@ -322,7 +333,7 @@ class CalendarManager: ObservableObject {
             
             let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay)
             
-            newDays.append(CalendarDay(date: day, lunar_short: lunar_short,lunar_full: lunar_full,holidays: holidays,solar_term: solar_term , events: dayEvents))
+            newDays.append(CalendarDay(date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term , events: dayEvents))
         }
         
         self.calendarDays = newDays

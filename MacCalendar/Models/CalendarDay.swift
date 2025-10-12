@@ -12,9 +12,9 @@ struct CalendarDay:Hashable{
     /// 日期
     let date:Date
     /// 简单农历
-    let lunar_short:String?
+    let short_lunar:String?
     /// 完整农历
-    let lunar_full:String?
+    let full_lunar:String?
     /// 节假日
     let holidays:[String]
     /// 节气

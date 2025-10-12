@@ -23,15 +23,22 @@ struct EventListView: View {
     var body: some View {
         if calendarManager.selectedDayEvents.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text(DateHelper.formatDate(date: calendarManager.selectedDay, format: "yyyy年MM月dd日"))
+                HStack{
+                    Text("\(DateHelper.formatDate(date: calendarManager.selectedDay, format: "yyyy年MM月dd日"))")
+                    Spacer()
+                    Text(calendarManager.selectedDayLunar)
+                }
                 Text("今天无日程")
                     .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding([.leading,.trailing])
         }
         else{
             VStack(alignment: .leading, spacing: 8) {
-                Text(DateHelper.formatDate(date: calendarManager.selectedDay, format: "yyyy年MM月dd日"))
+                HStack{
+                    Text("\(DateHelper.formatDate(date: calendarManager.selectedDay, format: "yyyy年MM月dd日"))")
+                    Spacer()
+                    Text(calendarManager.selectedDayLunar)
+                }
                 ScrollView {
                     VStack(alignment: .leading, spacing: 5) {
                         ForEach(calendarManager.selectedDayEvents, id: \.id) { event in

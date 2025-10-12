@@ -69,7 +69,7 @@ struct CalendarView: View {
                                     .font(.system(size: 12))
                                     .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .gray.opacity(0.5)))
                                 
-                                Text(!day.holidays.isEmpty ? day.holidays[0] : day.solar_term ?? day.lunar_short ?? "")
+                                Text(!day.holidays.isEmpty ? day.holidays[0] : day.solar_term ?? day.short_lunar ?? "")
                                     .font(.system(size: 8))
                                     .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .gray.opacity(0.5)))
                             }
