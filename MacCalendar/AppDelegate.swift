@@ -20,7 +20,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     
     private var calendarIcon = CalendarIcon()
     private var cancellables = Set<AnyCancellable>()
-
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         
@@ -41,30 +41,30 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         }
         
         calendarIcon.$displayOutput
-                    .receive(on: DispatchQueue.main)
-                    .sink { [weak self] output in
-                        guard let button = self?.statusItem.button else { return }
-                        
-                        if output == "" {
-                            button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")
-                            button.title = ""
-                        } else {
-                            button.title = output
-                            button.image = nil
-                        }
-                    }
-                    .store(in: &cancellables)
-
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] output in
+                guard let button = self?.statusItem.button else { return }
+                
+                if output == "" {
+                    button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")
+                    button.title = ""
+                } else {
+                    button.title = output
+                    button.image = nil
+                }
+            }
+            .store(in: &cancellables)
+        
         popover = NSPopover()
         popover.appearance = NSAppearance(named: .aqua)
         popover.behavior = .transient
         
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: NSApplication.didResignActiveNotification, object: nil)
     }
-
+    
     @objc func statusItemClicked(sender: NSStatusBarButton) {
         guard let event = NSApp.currentEvent else { return }
-
+        
         if event.type == .rightMouseUp {
             let menu = NSMenu()
             menu.addItem(NSMenuItem(title: "设置", action: #selector(showSettingsWindow), keyEquivalent: ","))
@@ -78,7 +78,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             togglePopover()
         }
     }
-
+    
     @objc func togglePopover() {
         if let button = statusItem.button {
             if popover.isShown {
@@ -120,8 +120,10 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     }
     
     func openEventEditWindow(with parameter: CalendarEvent) {
-        if let existingWindow = eventEditWindow {
-            existingWindow.close()
+        if let existingWindow = eventEditWindow, existingWindow.isVisible {
+            existingWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
         }
         
         let contentView = EventEditView(event: parameter).environmentObject(calendarManager)
@@ -136,11 +138,24 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         window.delegate = self
         window.title = "编辑事件"
         window.center()
+        window.isReleasedWhenClosed = false
+        
         window.contentView = NSHostingView(rootView: contentView)
         window.makeKeyAndOrderFront(nil)
         
         NSApp.activate(ignoringOtherApps: true)
         
         self.eventEditWindow = window
+    }
+    
+    func windowWillClose(_ notification: Notification) {
+        if let window = notification.object as? NSWindow {
+            if window == settingsWindow {
+                settingsWindow = nil
+            }
+            if window == eventEditWindow {
+                eventEditWindow = nil
+            }
+        }
     }
 }
