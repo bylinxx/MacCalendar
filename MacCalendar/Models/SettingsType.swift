@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum SettingsType:String,CaseIterable,Identifiable{
-    case icon = "菜单栏显示"
+    case customized = "个性化"
     case calendar = "日程显示"
     case launchAtLogin = "启动项"
     case about = "关于"
@@ -18,7 +18,7 @@ enum SettingsType:String,CaseIterable,Identifiable{
     @ViewBuilder
     var view:some View {
         switch self {
-        case .icon:
+        case .customized:
             SettingsIconView()
         case .calendar:
             SettingsCalendarView()

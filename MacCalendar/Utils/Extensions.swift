@@ -9,9 +9,8 @@ import Foundation
 import SwiftUI
 
 extension Calendar {
-    static var mondayBased: Calendar {
-        var calendar = Calendar.current
-        calendar.firstWeekday = 2
+    static var Based: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
         return calendar
     }
 }

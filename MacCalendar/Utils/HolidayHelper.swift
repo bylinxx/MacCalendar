@@ -38,7 +38,7 @@ public class HolidayHelper {
     public static func getHolidays(date: Date, lunarMonth: Int, lunarDay: Int, daysInLunarMonth: Int) -> [String] {
         var foundHolidays: [String] = []
         
-        let calendar = Calendar.mondayBased
+        let calendar = Calendar.Based
         
         let gregorianComponents = calendar.dateComponents([.month, .day], from: date)
         if let month = gregorianComponents.month, let day = gregorianComponents.day {

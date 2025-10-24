@@ -10,9 +10,8 @@ import SwiftUI
 struct CalendarView: View {
     @ObservedObject var calendarManager:CalendarManager
     
-    let weekDays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
     let columns = Array(repeating: GridItem(.flexible()), count: 7)
-    let calendar = Calendar.mondayBased
+    let calendar = Calendar.Based
 
     var body: some View {
         VStack(spacing:0) {
@@ -38,7 +37,7 @@ struct CalendarView: View {
             }
             
             HStack {
-                    ForEach(weekDays, id: \.self) { day in
+                ForEach(calendarManager.weekdays, id: \.self) { day in
                         VStack(spacing: 4) {
                             Text(day)
                                 .font(.system(size: 12))

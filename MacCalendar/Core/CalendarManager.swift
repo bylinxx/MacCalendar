@@ -18,8 +18,9 @@ class CalendarManager: ObservableObject {
     @Published var selectedDayLunar:String = ""
     @Published var selectedDayEvents: [CalendarEvent] = []
     @Published var authorizationStatus: EKAuthorizationStatus = .notDetermined
+    @Published var weekdays:[String] = []
     
-    private let calendar = Calendar.mondayBased
+    private let calendar = Calendar.Based
     private let eventStore = EKEventStore()
     private var cancellables = Set<AnyCancellable>()
     
@@ -40,8 +41,31 @@ class CalendarManager: ObservableObject {
                 self?.setFilterCalendarIds()
             }
             .store(in: &cancellables)
+        
+        NotificationCenter.default
+            .publisher(for: UserDefaults.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateWeekdays()
+            }
+            .store(in: &cancellables)
     }
-    
+    private func updateWeekdays() {
+        let newFirstDay = SettingsManager.firstDayInWeek
+        let currentFirstDay: FirstDayInWeek = (weekdays.first == "周一") ? .monday : .sunday
+        if newFirstDay == currentFirstDay && !weekdays.isEmpty {
+            return
+        }
+        
+        if newFirstDay == .monday {
+            weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+        }
+        else {
+            weekdays = ["周日","周一", "周二", "周三", "周四", "周五", "周六"]
+        }
+        
+        goToCurrentMonth()
+    }
     func resetToToday() {
         if !calendar.isDate(selectedMonth, equalTo: Date(), toGranularity: .month) {
             goToCurrentMonth()
@@ -70,13 +94,13 @@ class CalendarManager: ObservableObject {
     
     func getSelectedDayEvents(date: Date) {
         selectedDay = date
-        if let day = calendarDays.first(where: { Calendar.mondayBased.isDate($0.date, inSameDayAs: date) }) {
+        if let day = calendarDays.first(where: { Calendar.Based.isDate($0.date, inSameDayAs: date) }) {
             selectedDayLunar = day.full_lunar ?? ""
         } else {
             selectedDayLunar = ""
         }
         
-        if let day = calendarDays.first(where: { Calendar.mondayBased.isDate($0.date, inSameDayAs: date) }) {
+        if let day = calendarDays.first(where: { Calendar.Based.isDate($0.date, inSameDayAs: date) }) {
             selectedDayEvents = day.events
         } else {
             selectedDayEvents = []
@@ -276,8 +300,9 @@ class CalendarManager: ObservableObject {
         let range = calendar.range(of: .day, in: .month, for: date)!
         
         // 上个月补齐
+        let firstWeekday = SettingsManager.firstDayInWeek == FirstDayInWeek.monday ? 2 : 1
         let weekdayOfFirst = calendar.component(.weekday, from: firstDayOfMonth)
-        let offsetToMonday = (weekdayOfFirst - calendar.firstWeekday + 7) % 7
+        let offsetToMonday = (weekdayOfFirst - firstWeekday + 7) % 7
         if offsetToMonday > 0 {
             for i in stride(from: offsetToMonday, to: 0, by: -1) {
                 if let prevDay = calendar.date(byAdding: .day, value: -i, to: firstDayOfMonth) {

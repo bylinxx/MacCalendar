@@ -27,7 +27,7 @@ struct DateHelper{
         let earlierDate = min(startDate, endDate)
         let laterDate = max(startDate, endDate)
         
-        let calendar = Calendar.mondayBased
+        let calendar = Calendar.Based
         
         let components = calendar.dateComponents([.hour, .minute], from: earlierDate, to: laterDate)
         

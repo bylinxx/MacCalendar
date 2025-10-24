@@ -127,7 +127,7 @@ struct SolarTermHelper {
     /// - Parameter date: 需要查询的日期。
     /// - Returns: 如果该日期是二十四节气之一，则返回其中文名称（例如 "立春"）；否则返回 `nil`。
     public static func getSolarTerm(for date: Date) -> String? {
-        let calendar = Calendar.mondayBased
+        let calendar = Calendar.Based
         let components = calendar.dateComponents([.year, .month, .day], from: date)
 
         guard let year = components.year, let month = components.month, let day = components.day else {
