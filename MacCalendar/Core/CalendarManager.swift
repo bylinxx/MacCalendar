@@ -320,6 +320,10 @@ class CalendarManager: ObservableObject {
             let lunarYear = lunarCalendar.component(.year, from: day)
             let lunarMonth = lunarCalendar.component(.month, from: day)
             let lunarDay = lunarCalendar.component(.day, from: day)
+            var daysInLunarMonth = 0
+            if let range = lunarCalendar.range(of: .day, in: .month, for: day) {
+                daysInLunarMonth = range.count
+            }
             
             let ganzhiYear = LunarDateHelper.getGanzhiYear(for: day)
             let zodiac = LunarDateHelper.getZodiac(for: day)
@@ -331,7 +335,7 @@ class CalendarManager: ObservableObject {
             
             let solar_term = SolarTermHelper.getSolarTerm(for: day)
             
-            let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay)
+            let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay, daysInLunarMonth: daysInLunarMonth)
             
             newDays.append(CalendarDay(date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term , events: dayEvents))
         }

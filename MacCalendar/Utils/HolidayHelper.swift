@@ -20,7 +20,8 @@ public class HolidayHelper {
         "01-01": "春节", "01-15": "元宵节", "02-02": "龙抬头",
         "05-05": "端午节", "07-07": "七夕节", "07-15": "中元节",
         "08-15": "中秋节", "09-09": "重阳节", "12-08": "腊八节",
-        "12-23": "小年","12-29":"除夕"
+        "12-23": "小年(北)",
+        "12-24": "小年(南)"
     ]
 
     private static func formatNumber(_ number: Int) -> String {
@@ -32,17 +33,34 @@ public class HolidayHelper {
     ///   - date: 公历日期 (Date)
     ///   - lunarMonth: 数值型农历月份 (例如: 1, 8, 12)
     ///   - lunarDay: 数值型农历日期 (例如: 1, 15, 23)
+    ///   - daysInLunarMonth: 当前农历月份的总天数 (用于计算除夕) [新增参数]
     /// - Returns: 一个包含所有匹配到的节日名称的字符串数组
-    public static func getHolidays(date: Date, lunarMonth: Int, lunarDay: Int) -> [String] {
+    public static func getHolidays(date: Date, lunarMonth: Int, lunarDay: Int, daysInLunarMonth: Int) -> [String] {
         var foundHolidays: [String] = []
         
         let calendar = Calendar.mondayBased
         
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MM-dd"
-        let gregorianKey = dateFormatter.string(from: date)
-        if let holiday = gregorianHolidays[gregorianKey] {
-            foundHolidays.append(holiday)
+        let gregorianComponents = calendar.dateComponents([.month, .day], from: date)
+        if let month = gregorianComponents.month, let day = gregorianComponents.day {
+            let gregorianKey = "\(formatNumber(month))-\(formatNumber(day))"
+            if let holiday = gregorianHolidays[gregorianKey] {
+                foundHolidays.append(holiday)
+            }
+        }
+        
+        let components = calendar.dateComponents([.month, .weekday, .weekdayOrdinal], from: date)
+        
+        if let month = components.month, let weekday = components.weekday, let weekdayOrdinal = components.weekdayOrdinal {
+            
+            // 母亲节: 5月的第2个周日 (weekday == 1 是周日)
+            if month == 5 && weekday == 1 && weekdayOrdinal == 2 {
+                foundHolidays.append("母亲节")
+            }
+            
+            // 父亲节: 6月的第3个周日 (weekday == 1 是周日)
+            if month == 6 && weekday == 1 && weekdayOrdinal == 3 {
+                foundHolidays.append("父亲节")
+            }
         }
 
         let lunarKey = "\(formatNumber(lunarMonth))-\(formatNumber(lunarDay))"
@@ -50,20 +68,10 @@ public class HolidayHelper {
             foundHolidays.append(holiday)
         }
 
-        let components = calendar.dateComponents([.month, .weekday, .weekdayOrdinal], from: date)
-        
-        if let month = components.month, let weekday = components.weekday, let weekdayOrdinal = components.weekdayOrdinal {
-            
-            if month == 5 && weekday == 1 && weekdayOrdinal == 2 {
-                foundHolidays.append("母亲节")
-            }
-            
-            if month == 6 && weekday == 1 && weekdayOrdinal == 3 {
-                foundHolidays.append("父亲节")
-            }
+        if lunarMonth == 12 && lunarDay == daysInLunarMonth {
+            foundHolidays.append("除夕")
         }
         
         return foundHolidays
     }
 }
-
