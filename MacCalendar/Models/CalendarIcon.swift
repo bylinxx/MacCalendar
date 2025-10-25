@@ -13,12 +13,57 @@ class CalendarIcon: ObservableObject {
     
     private var timer: Timer?
     private let dateFormatter = DateFormatter()
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
+        NotificationCenter.default
+            .publisher(for: UserDefaults.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.manageTimer()
+            }
+            .store(in: &cancellables)
+        
+        manageTimer()
+    }
+    
+    deinit {
+        timer?.invalidate()
+    }
+
+    private func manageTimer() {
+        let mode = SettingsManager.displayMode
+        
+        if mode == .icon {
+            if timer != nil {
+                stopTimer()
+            }
+        } else {
+            if timer == nil {
+                startTimer()
+            }
+        }
+        
         updateDisplayOutput()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+    }
+    
+    private func startTimer() {
+        guard timer == nil else { return }
+        
+        timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateDisplayOutput()
         }
+        
+        updateDisplayOutput()
+        
+        if let timer = timer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+    
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
     }
 
     private func updateDisplayOutput() {

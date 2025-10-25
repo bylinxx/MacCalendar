@@ -342,7 +342,6 @@ class CalendarManager: ObservableObject {
         var newDays: [CalendarDay] = []
         
         for day in gridDates {
-            let lunarYear = lunarCalendar.component(.year, from: day)
             let lunarMonth = lunarCalendar.component(.month, from: day)
             let lunarDay = lunarCalendar.component(.day, from: day)
             var daysInLunarMonth = 0

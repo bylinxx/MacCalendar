@@ -10,7 +10,7 @@ import SwiftUI
 
 extension Calendar {
     static var Based: Calendar {
-        var calendar = Calendar(identifier: .gregorian)
+        let calendar = Calendar(identifier: .gregorian)
         return calendar
     }
 }
