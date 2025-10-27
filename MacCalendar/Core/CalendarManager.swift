@@ -50,6 +50,7 @@ class CalendarManager: ObservableObject {
             }
             .store(in: &cancellables)
     }
+    
     private func updateWeekdays() {
         let newFirstDay = SettingsManager.firstDayInWeek
         let currentFirstDay: FirstDayInWeek = (weekdays.first == "周一") ? .monday : .sunday
@@ -66,6 +67,7 @@ class CalendarManager: ObservableObject {
         
         goToCurrentMonth()
     }
+    
     func resetToToday() {
         if !calendar.isDate(selectedMonth, equalTo: Date(), toGranularity: .month) {
             goToCurrentMonth()
@@ -285,9 +287,18 @@ class CalendarManager: ObservableObject {
     
     private func groupEventsByDay(events: [CalendarEvent]) -> [Date: [CalendarEvent]] {
         var groupedEvents = [Date: [CalendarEvent]]()
+        
         for event in events {
-            let dayOfEvent = calendar.startOfDay(for: event.startDate)
-            groupedEvents[dayOfEvent, default: []].append(event)
+            var currentDay = calendar.startOfDay(for: event.startDate)            
+            while event.endDate > currentDay {
+                guard let nextDay = calendar.date(byAdding: .day, value: 1, to: currentDay) else {
+                    break
+                }
+                if event.startDate < nextDay {
+                    groupedEvents[currentDay, default: []].append(event)
+                }
+                currentDay = nextDay
+            }
         }
         return groupedEvents
     }
