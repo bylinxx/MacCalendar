@@ -63,6 +63,15 @@ struct CalendarView: View {
                                 .fill(Color.red.opacity(0.3))
                                 .frame(width: 35, height: 35, alignment: .center)
                         }
+                        if day.offday != nil {
+                                Text(day.offday == true ? "休":"班")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.white)
+                                .frame(width: 14,height: 14)
+                                .background(day.offday == true ? .red : .gray)
+                                .cornerRadius(3)
+                                .offset(x:12,y:-12)
+                        }
                             VStack(spacing: -2) {
                                 Text("\(calendar.component(.day, from: day.date))")
                                     .font(.system(size: 12))
@@ -82,6 +91,7 @@ struct CalendarView: View {
                                 .offset(y:15)
                         }
                     }
+                    .frame(width: 35, height: 35, alignment: .center)
                     .contentShape(Circle())
                     .onTapGesture {
                         calendarManager.getSelectedDayEvents(date: day.date)

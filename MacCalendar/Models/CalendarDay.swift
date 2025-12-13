@@ -19,6 +19,8 @@ struct CalendarDay:Hashable{
     let holidays:[String]
     /// 节气
     let solar_term:String?
+    /// 放假
+    let offday :Bool?
     /// 事件
     let events:[CalendarEvent]
 }

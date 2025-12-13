@@ -372,7 +372,9 @@ class CalendarManager: ObservableObject {
             
             let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay, daysInLunarMonth: daysInLunarMonth)
             
-            newDays.append(CalendarDay(date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term , events: dayEvents))
+            let offday = OffdayHelper.checkOffdayStatus(for: day);
+
+            newDays.append(CalendarDay(date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term,offday: offday, events: dayEvents))
         }
         
         self.calendarDays = newDays
