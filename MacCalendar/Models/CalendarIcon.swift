@@ -139,6 +139,13 @@ class CalendarIcon: ObservableObject {
             displayOutput = dateFormatter.string(from: Date())
         case .custom:
             dateFormatter.dateFormat = SettingsManager.customFormatString
+            if SettingsManager.customFormatString.contains("w") {
+                            var calendar = Calendar(identifier: .iso8601)
+                            // ISO 8601 标准：周一为第一天，第一周至少4天
+                            calendar.firstWeekday = 2 // 2 代表周一
+                            calendar.minimumDaysInFirstWeek = 4
+                            dateFormatter.calendar = calendar
+                        }
             displayOutput = dateFormatter.string(from: Date())
         }
     }
