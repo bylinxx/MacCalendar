@@ -18,5 +18,21 @@ struct ContentView: View {
             EventListView(calendarManager: calendarManager)
         }
         .padding()
+        .fixedSize()
+        .overlay(
+            GeometryReader{ proxy in
+                Color.clear
+                    .preference(
+                        key: SizeKey.self, value: proxy.size
+                    )
+            }
+        )
+    }
+}
+
+struct SizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
     }
 }

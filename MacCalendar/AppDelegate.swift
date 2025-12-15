@@ -18,6 +18,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     var eventEditWindow:NSWindow?
     var calendarManager = CalendarManager()
     
+    private var resizeWorkItem:DispatchWorkItem?
     private var calendarIcon = CalendarIcon()
     private var cancellables = Set<AnyCancellable>()
     
@@ -85,12 +86,33 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
                 popover.performClose(nil)
             } else {
                 calendarManager.resetToToday()
-                let hostingController = FocusableHostingController(rootView: ContentView().environmentObject(calendarManager))
-                hostingController.sizingOptions = .intrinsicContentSize
+                
+                let hostingController = FocusableHostingController(rootView: ContentView()
+                    .environmentObject(calendarManager)
+                    .onPreferenceChange(SizeKey.self){ size in
+                        guard size != .zero else { return }
+                        
+                        self.resizeWorkItem?.cancel()
+                        
+                        let workItem = DispatchWorkItem{
+                            // 防止 popover 已经关闭了
+                            guard self.popover.isShown else { return }
+                            
+                            self.popover.contentSize = size
+                        }
+                        
+                        self.resizeWorkItem = workItem
+                        // 延迟80ms执行
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
+                    }
+                )
+                
                 popover.contentViewController = hostingController
                 
                 NSApp.activate(ignoringOtherApps: true)
-                popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+                DispatchQueue.main.async {
+                    self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+                }
             }
         }
     }
