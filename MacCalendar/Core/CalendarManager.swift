@@ -80,6 +80,21 @@ class CalendarManager: ObservableObject {
         Task { await loadCalendarDays(date: selectedMonth) }
     }
     
+    func goToCustomizeMonth(year: Int, month: Int) {
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = 1
+        
+        if let targetDate = Calendar.current.date(from: components) {
+            
+            selectedMonth = targetDate
+            Task {
+                await loadCalendarDays(date: targetDate)
+            }
+        }
+    }
+    
     func goToNextMonth() {
         if let nextMonth = calendar.date(byAdding: .month, value: 1, to: selectedMonth) {
             selectedMonth = nextMonth

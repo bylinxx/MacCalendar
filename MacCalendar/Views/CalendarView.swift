@@ -10,12 +10,19 @@ import SwiftUI
 struct CalendarView: View {
     @ObservedObject var calendarManager:CalendarManager
     
+    @FocusState private var focusedField: DateField?
+
+    enum DateField {
+        case year
+        case month
+    }
+    
     let columns = Array(repeating: GridItem(.flexible()), count: 7)
     let calendar = Calendar.Based
 
     var body: some View {
         VStack(spacing:0) {
-            HStack{
+            HStack(spacing:0){
                 Image(systemName: "chevron.compact.backward")
                     .frame(width:80,alignment: .leading)
                     .contentShape(Rectangle())
@@ -23,10 +30,21 @@ struct CalendarView: View {
                         calendarManager.goToPreviousMonth()
                     }
                 Spacer()
-                Text(ConvertTitle(date: calendarManager.selectedMonth))
-                    .onTapGesture {
-                        calendarManager.goToCurrentMonth()
-                    }
+                HStack(spacing:0){
+                    EditableDateComponent(
+                        date: $calendarManager.selectedMonth,
+                        component: .year,
+                        calendarManager: calendarManager, focusState: _focusedField,
+                        equals: .year
+                    )
+                    
+                    EditableDateComponent(
+                        date: $calendarManager.selectedMonth,
+                        component: .month,
+                        calendarManager: calendarManager, focusState: _focusedField,
+                        equals: .month
+                    )
+                }
                 Spacer()
                 Image(systemName: "chevron.compact.forward")
                     .frame(width:80,alignment: .trailing)
@@ -100,10 +118,83 @@ struct CalendarView: View {
             }
         }
     }
+}
+
+struct EditableDateComponent: View {
+    @Binding var date: Date
+    let component: Calendar.Component
     
-    func ConvertTitle(date: Date) -> String {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy年MM月"
-            return formatter.string(from: date)
+    var calendarManager: CalendarManager
+    
+    @FocusState var focusState: CalendarView.DateField?
+    let equals: CalendarView.DateField
+    
+    @State private var isEditing: Bool = false
+    @State private var temporaryText: String = ""
+
+    var body: some View {
+        Group {
+            if isEditing {
+                TextField("输入", text: $temporaryText)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 50)
+                    .multilineTextAlignment(.center)
+                    .focused($focusState, equals: equals)
+                    .onSubmit {
+                        commitChange()
+                    }
+                    .onChange(of: focusState) { newValue in
+                        if newValue != equals {
+                            commitChange()
+                        }
+                    }
+            } else {
+                Text(date, format: component == .year ? .dateTime.year() : .dateTime.month())
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        startEditing()
+                    }
+            }
         }
+    }
+    
+    private func startEditing() {
+        let value = Calendar.current.component(component, from: date)
+        temporaryText = String(value)
+        isEditing = true
+        focusState = equals
+    }
+    
+    private func commitChange() {
+        let cleanText = temporaryText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard let newValue = Int(cleanText) else {
+            isEditing = false
+            return
+        }
+
+        if component == .month {
+            if !(1...12).contains(newValue) {
+                isEditing = false
+                return
+            }
+        }
+
+        var components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+        
+        if component == .year {
+            components.year = newValue
+        } else if component == .month {
+            components.month = newValue
+        }
+        
+        if let newDate = Calendar.current.date(from: components) {
+            let year = Calendar.current.component(.year, from: newDate)
+            let month = Calendar.current.component(.month, from: newDate)
+            
+            calendarManager.goToCustomizeMonth(year: year, month: month)
+        }
+        
+        isEditing = false
+    }
 }
