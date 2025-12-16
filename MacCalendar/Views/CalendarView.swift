@@ -30,7 +30,7 @@ struct CalendarView: View {
                         calendarManager.goToPreviousMonth()
                     }
                 Spacer()
-                HStack(spacing:0){
+                HStack(){
                     EditableDateComponent(
                         date: $calendarManager.selectedMonth,
                         component: .year,
@@ -143,7 +143,7 @@ struct EditableDateComponent: View {
                     .onSubmit {
                         commitChange()
                     }
-                    .onChange(of: focusState) { newValue in
+                    .onChange(of: focusState) { oldValue,newValue in
                         if newValue != equals {
                             commitChange()
                         }
