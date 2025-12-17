@@ -10,7 +10,13 @@ import Foundation
 
 struct DateHelper{
     static func formatDate(date: Date, format: String, localeIdentifier: String = Locale.current.identifier) -> String {
+        var calendar = Calendar(identifier: .iso8601)
+        // ISO 8601 标准：周一为第一天，第一周至少4天
+        calendar.firstWeekday = 2 // 2 代表周一
+        calendar.minimumDaysInFirstWeek = 4
+        
         let formatter = DateFormatter()
+        formatter.calendar = calendar;
         formatter.dateFormat = format
         formatter.locale = Locale(identifier: localeIdentifier)
         return formatter.string(from: date)
