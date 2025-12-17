@@ -25,10 +25,19 @@ enum FirstDayInWeek:String,CaseIterable,Identifiable{
     var id:Self{self}
 }
 
+enum WeekNumberDisplayMode: String, CaseIterable, Identifiable {
+    case show = "显示"
+    case hide = "隐藏"
+    
+    var id: Self { self }
+}
+
 struct SettingsManager {
     @AppStorage("displayMode") static var displayMode: DisplayMode = .icon
     @AppStorage("customFormatString") static var customFormatString: String = "yyyy-MM-dd"
     @AppStorage("filterCalendar") static var filterCalendar: Data = Data()
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     @AppStorage("firstDayInWeek") static var firstDayInWeek:FirstDayInWeek = .sunday
+    // 将原本的 Bool 改为 Enum 存储，默认设为隐藏
+    @AppStorage("weekNumberDisplayMode") static var weekNumberDisplayMode: WeekNumberDisplayMode = .hide
 }

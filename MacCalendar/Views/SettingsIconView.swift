@@ -11,6 +11,7 @@ struct SettingsIconView: View {
     @AppStorage("displayMode") private var displayMode: DisplayMode = SettingsManager.displayMode
     @AppStorage("customFormatString") private var customFormatString: String = SettingsManager.customFormatString
     @AppStorage("firstDayInWeek") private var firstDayInWeek:FirstDayInWeek = SettingsManager.firstDayInWeek
+    @AppStorage("weekNumberDisplayMode") private var weekNumberDisplayMode: WeekNumberDisplayMode = SettingsManager.weekNumberDisplayMode
     
     var body: some View {
         VStack(alignment: .leading,spacing:10) {
@@ -36,6 +37,14 @@ struct SettingsIconView: View {
             
             Picker("星期起始:", selection: $firstDayInWeek) {
                 ForEach(FirstDayInWeek.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            
+            Divider()
+            
+            Picker("周数:", selection: $weekNumberDisplayMode) {
+                ForEach(WeekNumberDisplayMode.allCases) { mode in
                     Text(mode.rawValue).tag(mode)
                 }
             }
