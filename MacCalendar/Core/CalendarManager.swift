@@ -19,7 +19,7 @@ class CalendarManager: ObservableObject {
     @Published var selectedDayEvents: [CalendarEvent] = []
     @Published var authorizationStatus: EKAuthorizationStatus = .notDetermined
     @Published var weekdays:[String] = []
-    
+        
     private let calendar = Calendar.Based
     private let eventStore = EKEventStore()
     private var cancellables = Set<AnyCancellable>()
@@ -52,17 +52,15 @@ class CalendarManager: ObservableObject {
     }
     
     private func updateWeekdays() {
-        let newFirstDay = SettingsManager.firstDayInWeek
-        let currentFirstDay: FirstDayInWeek = (weekdays.first == "周一") ? .monday : .sunday
-        if newFirstDay == currentFirstDay && !weekdays.isEmpty {
-            return
-        }
-        
-        if newFirstDay == .monday {
+        if SettingsManager.firstDayInWeek == .monday {
             weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
         }
         else {
             weekdays = ["周日","周一", "周二", "周三", "周四", "周五", "周六"]
+        }
+        
+        if SettingsManager.weekNumberDisplayMode == .show {
+            weekdays.insert("", at: 0)
         }
         
         goToCurrentMonth()
@@ -111,13 +109,14 @@ class CalendarManager: ObservableObject {
     
     func getSelectedDayEvents(date: Date) {
         selectedDay = date
-        if let day = calendarDays.first(where: { Calendar.Based.isDate($0.date, inSameDayAs: date) }) {
+        let _calendarDays = calendarDays.filter { $0.is_weekNumber == false }
+        if let day = _calendarDays.first(where: { Calendar.Based.isDate($0.date!, inSameDayAs: date) }) {
             selectedDayLunar = day.full_lunar ?? ""
         } else {
             selectedDayLunar = ""
         }
         
-        if let day = calendarDays.first(where: { Calendar.Based.isDate($0.date, inSameDayAs: date) }) {
+        if let day = _calendarDays.first(where: { Calendar.Based.isDate($0.date!, inSameDayAs: date) }) {
             selectedDayEvents = day.events
         } else {
             selectedDayEvents = []
@@ -357,7 +356,17 @@ class CalendarManager: ObservableObject {
         
         return gridDates
     }
-    
+    private func calculateWeekOfYear(for date: Date?) -> Int {
+        guard let date = date else { return 0 }
+        
+        var calendar = Calendar(identifier: .iso8601)
+        calendar.firstWeekday = 2
+        calendar.minimumDaysInFirstWeek = 4
+        
+        let week = calendar.component(.weekOfYear, from: date)
+        
+        return week
+    }
     private func generateCalendarGrid(for date: Date, events: [Date: [CalendarEvent]]) {
         let lunarCalendar = Calendar(identifier: .chinese)
         let lunarMonthSymbols = ["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"]
@@ -392,6 +401,25 @@ class CalendarManager: ObservableObject {
             newDays.append(CalendarDay(date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term,offday: offday, events: dayEvents))
         }
         
-        self.calendarDays = newDays
+        var _newDays :[CalendarDay] = []
+        if SettingsManager.weekNumberDisplayMode == .show {
+            let day_groups = stride(from: 0, to: newDays.count, by: 7).map {
+                Array(newDays[$0..<min($0 + 7, newDays.count)])
+            }
+            
+            for group in day_groups {
+                let weekNum = calculateWeekOfYear(for: group.first?.date)
+                
+                let weekItem = CalendarDay(is_weekNumber:true,weekNumber:weekNum)
+                
+                _newDays.append(weekItem)
+                _newDays.append(contentsOf: group)
+            }
+            
+            self.calendarDays = _newDays
+        }
+        else{
+            self.calendarDays = newDays
+        }
     }
 }

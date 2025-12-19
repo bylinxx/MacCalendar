@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CalendarView: View {
     @ObservedObject var calendarManager:CalendarManager
-    
+        
     @FocusState private var focusedField: DateField?
 
     enum DateField {
@@ -17,7 +17,10 @@ struct CalendarView: View {
         case month
     }
     
-    let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    var columns: [GridItem] {
+        let count = SettingsManager.weekNumberDisplayMode == .show ? 8 : 7
+        return Array(repeating: GridItem(.flexible()), count: count)
+    }
     let calendar = Calendar.Based
 
     var body: some View {
@@ -67,31 +70,37 @@ struct CalendarView: View {
             
             LazyVGrid(columns: columns, spacing: 0) {
                 ForEach(calendarManager.calendarDays, id: \.self) { day in
-                    let isCurrentMonth = calendar.isDate(day.date, equalTo: calendarManager.selectedMonth, toGranularity: .month)
-                    let isToday = calendar.isDateInToday(day.date)
-                    
-                    ZStack{
-                        if isToday{
-                            Circle()
-                                .fill(Color.red)
-                                .frame(width: 35, height: 35, alignment: .center)
-                        }
-                        if calendar.isDate(day.date, equalTo: calendarManager.selectedDay, toGranularity: .day){
-                            Circle()
-                                .fill(Color.red.opacity(0.3))
-                                .frame(width: 35, height: 35, alignment: .center)
-                        }
-                        if day.offday != nil {
+                    if day.is_weekNumber == true {
+                        Text("\(day.weekNumber!)")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.gray.opacity(0.5))
+                    }
+                    else{
+                        let isCurrentMonth = calendar.isDate(day.date!, equalTo: calendarManager.selectedMonth, toGranularity: .month)
+                        let isToday = calendar.isDateInToday(day.date!)
+                        
+                        ZStack{
+                            if isToday{
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 35, height: 35, alignment: .center)
+                            }
+                            if calendar.isDate(day.date!, equalTo: calendarManager.selectedDay, toGranularity: .day){
+                                Circle()
+                                    .fill(Color.red.opacity(0.3))
+                                    .frame(width: 35, height: 35, alignment: .center)
+                            }
+                            if day.offday != nil {
                                 Text(day.offday == true ? "休":"班")
                                     .font(.system(size: 11))
                                     .foregroundStyle(.white)
-                                .frame(width: 14,height: 14)
-                                .background(day.offday == true ? .red : .gray)
-                                .cornerRadius(3)
-                                .offset(x:12,y:-12)
-                        }
+                                    .frame(width: 14,height: 14)
+                                    .background(day.offday == true ? .red : .gray)
+                                    .cornerRadius(3)
+                                    .offset(x:12,y:-12)
+                            }
                             VStack(spacing: -2) {
-                                Text("\(calendar.component(.day, from: day.date))")
+                                Text("\(calendar.component(.day, from: day.date!))")
                                     .font(.system(size: 12))
                                     .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .gray.opacity(0.5)))
                                 
@@ -102,17 +111,18 @@ struct CalendarView: View {
                             .frame(height:35)
                             .cornerRadius(6)
                             .contentShape(Rectangle())
-                        if !day.events.isEmpty {
-                            Circle()
-                                .fill(day.events.first!.color.color)
-                                .frame(width: 5, height: 5)
-                                .offset(y:15)
+                            if !day.events.isEmpty {
+                                Circle()
+                                    .fill(day.events.first!.color.color)
+                                    .frame(width: 5, height: 5)
+                                    .offset(y:15)
+                            }
                         }
-                    }
-                    .frame(width: 35, height: 35, alignment: .center)
-                    .contentShape(Circle())
-                    .onTapGesture {
-                        calendarManager.getSelectedDayEvents(date: day.date)
+                        .frame(width: 35, height: 35, alignment: .center)
+                        .contentShape(Circle())
+                        .onTapGesture {
+                            calendarManager.getSelectedDayEvents(date: day.date!)
+                        }
                     }
                 }
             }

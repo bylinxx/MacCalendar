@@ -11,6 +11,7 @@ struct SettingsIconView: View {
     @AppStorage("displayMode") private var displayMode: DisplayMode = SettingsManager.displayMode
     @AppStorage("customFormatString") private var customFormatString: String = SettingsManager.customFormatString
     @AppStorage("firstDayInWeek") private var firstDayInWeek:FirstDayInWeek = SettingsManager.firstDayInWeek
+    @AppStorage("weekNumberDisplayMode") private var weekNumberDisplayMode: WeekNumberDisplayMode = SettingsManager.weekNumberDisplayMode
     
     var body: some View {
         VStack(alignment: .leading,spacing:10) {
@@ -26,7 +27,7 @@ struct SettingsIconView: View {
                         Text("显示格式:")
                         TextField("自定义格式:", text: $customFormatString)
                     }
-                    Text("格式化代码参考: yyyy(年), MM(月), d(日), E(星期), HH(24时), h(12时), m(分), s(秒), a(上午/下午)")
+                    Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -39,6 +40,14 @@ struct SettingsIconView: View {
                     Text(mode.rawValue).tag(mode)
                 }
             }
+            
+            Divider()
+            
+            Picker("显示周数:", selection: $weekNumberDisplayMode) {
+                            ForEach(WeekNumberDisplayMode.allCases) { mode in
+                                Text(mode.rawValue).tag(mode)
+                            }
+                        }
             
             Spacer()
         }
