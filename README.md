@@ -12,10 +12,14 @@
 - 中国农历、24节气、大部分节日（公历或农历）
 
 - 中国法定放假安排（自2015年以来）
+  
+- 周数显示
 
 - 读取系统日历数据，可按类型筛选显示，支持修改和删除
 
 - 自定义菜单栏显示内容，支持图标/日期/时间/自定义格式
+
+- 输入年/月快捷跳转
 
 <img width="339" height="409" alt="截屏2025-12-16 23 14 34" src="https://github.com/user-attachments/assets/130caa88-df33-4415-ba0c-8f2818729a51" />
 <img width="335" height="345" alt="截屏2025-12-16 23 12 04" src="https://github.com/user-attachments/assets/6de91408-3a1d-48e7-867b-4803e608019d" />
