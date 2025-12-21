@@ -23,8 +23,7 @@
 
 <img width="339" height="409" alt="截屏2025-12-16 23 14 34" src="https://github.com/user-attachments/assets/130caa88-df33-4415-ba0c-8f2818729a51" />
 <img width="335" height="345" alt="截屏2025-12-16 23 12 04" src="https://github.com/user-attachments/assets/6de91408-3a1d-48e7-867b-4803e608019d" />
-<img width="522" height="400" alt="截屏2025-12-16 23 13 47" src="https://github.com/user-attachments/assets/a5f57ff8-00b3-45ca-9d06-b54a89678e07" />
-
+<img width="511" height="391" alt="截屏2025-12-19 23 38 07" src="https://github.com/user-attachments/assets/37957e03-7ce2-4868-98a9-c936be371e2b" />
 
 ## Star History
 
