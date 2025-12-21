@@ -76,11 +76,8 @@ struct CalendarView: View {
                             .foregroundStyle(.gray.opacity(0.5))
                     }
                     else{
-                        let isCurrentMonth = calendar.isDate(day.date!, equalTo: calendarManager.selectedMonth, toGranularity: .month)
-                        let isToday = calendar.isDateInToday(day.date!)
-                        
                         ZStack{
-                            if isToday{
+                            if day.is_today {
                                 Circle()
                                     .fill(Color.red)
                                     .frame(width: 35, height: 35, alignment: .center)
@@ -102,11 +99,11 @@ struct CalendarView: View {
                             VStack(spacing: -2) {
                                 Text("\(calendar.component(.day, from: day.date!))")
                                     .font(.system(size: 12))
-                                    .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .gray.opacity(0.5)))
+                                    .foregroundColor(day.is_today ? .white : (day.is_currentMonth ? .primary : .gray.opacity(0.5)))
                                 
                                 Text(!day.holidays.isEmpty ? day.holidays[0] : day.solar_term ?? day.short_lunar ?? "")
                                     .font(.system(size: 8))
-                                    .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .gray.opacity(0.5)))
+                                    .foregroundColor(day.is_today ? .white : (day.is_currentMonth ? .primary : .gray.opacity(0.5)))
                             }
                             .frame(height:35)
                             .cornerRadius(6)

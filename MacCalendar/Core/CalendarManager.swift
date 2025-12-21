@@ -396,9 +396,13 @@ class CalendarManager: ObservableObject {
             
             let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay, daysInLunarMonth: daysInLunarMonth)
             
-            let offday = OffdayHelper.checkOffdayStatus(for: day);
+            let offday = OffdayHelper.checkOffdayStatus(for: day)
+            
+            let is_today = calendar.isDateInToday(day)
+            
+            let is_currentMonth = calendar.isDate(day, equalTo: self.selectedMonth, toGranularity: .month)
 
-            newDays.append(CalendarDay(date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term,offday: offday, events: dayEvents))
+            newDays.append(CalendarDay(is_today: is_today,is_currentMonth: is_currentMonth,date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term,offday: offday, events: dayEvents))
         }
         
         var _newDays :[CalendarDay] = []

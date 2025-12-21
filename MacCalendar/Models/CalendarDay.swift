@@ -13,6 +13,10 @@ struct CalendarDay:Hashable{
     let is_weekNumber:Bool
     /// 周数
     let weekNumber:Int?
+    /// 是否今日
+    let is_today:Bool
+    /// 是否本月
+    let is_currentMonth:Bool
     /// 日期
     let date:Date?
     /// 简单农历
@@ -31,6 +35,8 @@ struct CalendarDay:Hashable{
     init(
             is_weekNumber: Bool = false,
             weekNumber: Int? = nil,
+            is_today: Bool = false,
+            is_currentMonth:Bool = false,
             date: Date? = nil,
             short_lunar: String? = nil,
             full_lunar: String? = nil,
@@ -41,6 +47,8 @@ struct CalendarDay:Hashable{
         ) {
             self.is_weekNumber = is_weekNumber
             self.weekNumber = weekNumber
+            self.is_today = is_today
+            self.is_currentMonth = is_currentMonth
             self.date = date
             self.short_lunar = short_lunar
             self.full_lunar = full_lunar
