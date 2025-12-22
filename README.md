@@ -27,7 +27,7 @@
 
 ## 中国法定节假日数据来源
 
-- [holiday-cn](https://github.com/NateScarlet/holiday-cn)
+- [NateScarlet/holiday-cn](https://github.com/NateScarlet/holiday-cn)
 
 ## Star History
 
