@@ -25,6 +25,10 @@
 <img width="335" height="345" alt="截屏2025-12-16 23 12 04" src="https://github.com/user-attachments/assets/6de91408-3a1d-48e7-867b-4803e608019d" />
 <img width="511" height="391" alt="截屏2025-12-19 23 38 07" src="https://github.com/user-attachments/assets/37957e03-7ce2-4868-98a9-c936be371e2b" />
 
+## 中国法定节假日数据来源
+
+- [holiday-cn](https://github.com/NateScarlet/holiday-cn)
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=bylinxx/MacCalendar&type=Timeline)](https://www.star-history.com/#bylinxx/MacCalendar&Timeline)
