@@ -42,7 +42,7 @@ struct EventDetailView: View {
                 Spacer()
                 
                 Button(action:{
-                    AppDelegate.shared?.openEventEditWindow(with: event)
+                    AppDelegate.shared?.openEventEditWindow(event:  event)
                 }){
                     Image(systemName: "square.and.pencil")
                         .foregroundStyle(.blue)

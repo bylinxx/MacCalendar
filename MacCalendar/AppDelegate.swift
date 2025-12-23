@@ -31,7 +31,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.action = #selector(statusItemClicked)
             button.target = self
-            button.font = NSFont.monospacedDigitSystemFont(ofSize: 14, weight: .regular)
+            button.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
         }
         
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -141,14 +141,14 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         settingsWindow?.makeKeyAndOrderFront(nil)
     }
     
-    func openEventEditWindow(with parameter: CalendarEvent) {
+    func openEventEditWindow(event: CalendarEvent) {
         if let existingWindow = eventEditWindow, existingWindow.isVisible {
             existingWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
         
-        let contentView = EventEditView(event: parameter).environmentObject(calendarManager)
+        let contentView = EventEditView(event: event).environmentObject(calendarManager)
         
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
