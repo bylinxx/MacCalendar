@@ -130,12 +130,10 @@ class CalendarIcon: ObservableObject {
         case .icon:
             displayOutput = ""
         case .date:
-            dateFormatter.dateStyle = .medium
-            dateFormatter.timeStyle = .none
-            displayOutput = dateFormatter.string(from: Date())
+            dateFormatter.dateFormat = "yy年MM月dd日"
+            displayOutput = dateFormatter.string(from: Date())            
         case .time:
-            dateFormatter.dateStyle = .none
-            dateFormatter.timeStyle = .medium
+            dateFormatter.dateFormat = "HH:mm:ss"
             displayOutput = dateFormatter.string(from: Date())
         case .custom:
             dateFormatter.dateFormat = SettingsManager.customFormatString

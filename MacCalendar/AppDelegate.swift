@@ -31,6 +31,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.action = #selector(statusItemClicked)
             button.target = self
+            button.font = NSFont.monospacedDigitSystemFont(ofSize: 14, weight: .regular)
         }
         
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -97,7 +98,6 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
                         let workItem = DispatchWorkItem{
                             // 防止 popover 已经关闭了
                             guard self.popover.isShown else { return }
-                            
                             self.popover.contentSize = size
                         }
                         
