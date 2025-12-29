@@ -24,12 +24,12 @@
 >   1. 从 [GitHub Releases](https://github.com/bylinxx/MacCalendar/releases/latest) 下载最新版本 dmg 格式的镜像
 >   2. 双击打开下载的 dmg 镜像
 >   3. 拖动MacCalendar图标到Applications图标完成安装
->   4. 如何更新？ 重复上述过程，当提示存在的时候点击“替换”
+>   4. 如何更新？ 重复上述过程，当提示存在的时候点击“替换”,完成后重新启动App
 > - **homebrew安装**
 >   1. 在命令行执行 brew tap bylinxx/tap 引入tap
 >   2. 在命令行执行 brew install maccalendar 完成安装
 >   3. 由于没有购买开发者签名，首次打开会提示“无法验证开发者”或“应用已损坏”，必须在“系统设置 -> 隐私与安全性 -> 安全性”中点击“仍要打开”，或者在终端执行 xattr -cr /Applications/MacCalendar.app 来移除安全隔离标记
->   4. 如何更新？ 在命令行执行 brew update 拉取更新，再执行 brew upgrade maccalendar 安装更新
+>   4. 如何更新？ 在命令行执行 brew update 拉取更新，再执行 brew upgrade maccalendar 安装更新，提示更新成功后手动退出App，重新启动App
 
 ## 支持开发
 
