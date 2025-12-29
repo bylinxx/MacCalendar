@@ -67,9 +67,7 @@ class CalendarManager: ObservableObject {
     }
     
     func resetToToday() {
-        if !calendar.isDate(selectedMonth, equalTo: Date(), toGranularity: .month) {
-            goToCurrentMonth()
-        }
+        goToCurrentMonth()
         getSelectedDayEvents(date: Date())
     }
     
