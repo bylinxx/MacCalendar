@@ -15,6 +15,7 @@ struct LunarDateHelper {
     private static let yearFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .chinese)
+        formatter.locale = Locale(identifier: "zh_CN")
         formatter.dateFormat = "U"
         return formatter
     }()
@@ -34,12 +35,18 @@ struct LunarDateHelper {
      - Returns: 生肖字符串，例如 "龍"
      */
     static func getZodiac(for date: Date) -> String {
-        let ganzhiYear = getGanzhiYear(for: date)
+        let chineseCalendar = Calendar(identifier: .chinese)
+        let year = chineseCalendar.component(.year, from: date)
         
-        guard ganzhiYear.count >= 2 else { return "" }
-        let branchCharacter = String(ganzhiYear[ganzhiYear.index(ganzhiYear.startIndex, offsetBy: 1)])
+        // 地支计算公式：(年份 - 1) % 12
+        // 例如：2024年是甲辰年，year 可能返回 41
+        // (41 - 1) % 12 = 40 % 12 = 4
+        // earthlyBranches[4] = "辰" (龙)
+        // zodiacSymbols[4] = "龍"
         
-        if let branchIndex = earthlyBranches.firstIndex(of: branchCharacter) {
+        let branchIndex = (year - 1) % 12
+        
+        if branchIndex >= 0 && branchIndex < zodiacSymbols.count {
             return zodiacSymbols[branchIndex]
         }
         
