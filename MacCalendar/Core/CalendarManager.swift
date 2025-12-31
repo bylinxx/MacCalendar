@@ -245,7 +245,16 @@ class CalendarManager: ObservableObject {
             authorizationStatus = EKEventStore.authorizationStatus(for: .event)
         }
     }
-    
+    func getDisplayName(participant: EKParticipant) -> String {
+        let rawName = participant.name ?? ""
+        if rawName.contains("@") {
+            let components = rawName.components(separatedBy: "@")
+            if let firstPart = components.first, !firstPart.isEmpty {
+                return firstPart
+            }
+        }
+        return rawName
+    }
     private func getEventsByDate(from startDate: Date, to endDate: Date) async -> [CalendarEvent] {
         var calendarsToFetch: [EKCalendar]? = nil
         
@@ -259,7 +268,7 @@ class CalendarManager: ObservableObject {
         
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendarsToFetch)
         let ekEvents = eventStore.events(matching: predicate)
-        
+                
         return ekEvents.map { ekEvent in
             CalendarEvent(
                 id: ekEvent.eventIdentifier,
@@ -272,7 +281,19 @@ class CalendarManager: ObservableObject {
                 endDate: ekEvent.endDate,
                 color: CodableColor(color: Color(nsColor: ekEvent.calendar.color)),
                 notes: ekEvent.notes,
-                url: ekEvent.url
+                url: ekEvent.url,
+                organizer: ekEvent.organizer.map { CalendarEventPerson(name: $0.name, url: $0.url) },
+                attendees: ekEvent.attendees?
+                    .map { participant in
+                        let prettyName = getDisplayName(participant: participant)
+                        return CalendarEventPerson(name: prettyName, url: participant.url)
+                    }
+                    .sorted { person1, person2 in
+                        let name1 = person1.name ?? ""
+                        let name2 = person2.name ?? ""
+                        return name1.localizedCaseInsensitiveCompare(name2) == .orderedAscending
+                    }
+                    ?? []
             )
         }
     }
