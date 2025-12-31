@@ -30,8 +30,7 @@ struct CodableColor: Codable, Hashable {
     }
 }
 
-
-struct CalendarEvent:Identifiable,Hashable,Codable {
+struct CalendarEvent:Identifiable,Hashable {
     let id:String
     /// 日历标题
     let calendar_title:String?
@@ -53,4 +52,14 @@ struct CalendarEvent:Identifiable,Hashable,Codable {
     var notes:String?
     /// 链接地址
     var url:URL?
+    /// 组织者
+    var organizer:CalendarEventPerson?
+    /// 受邀者
+    var attendees:[CalendarEventPerson]?
+}
+
+struct CalendarEventPerson:Hashable,Equatable
+{
+    let name:String?
+    let url:URL?
 }

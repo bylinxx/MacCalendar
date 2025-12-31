@@ -24,6 +24,8 @@ struct EventDetailView: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack{
                 Image(systemName: "clock")
+                    .frame(width:20)
+                    .scaledToFit()
                 Text(DateHelper.formatDate(date: event.startDate, format: "yyyy/MM/dd"))
                 if event.isAllDay {
                     Text("全天")
@@ -61,9 +63,56 @@ struct EventDetailView: View {
             if let location = event.location {
                 HStack{
                     Image(systemName: "location")
+                        .frame(width:20)
+                        .scaledToFit()
                     Text(location.replacingOccurrences(of: "\n", with: " "))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                }
+            }
+            
+            if let organizer = event.organizer {
+                let name = organizer.name ?? ""
+                
+                let url: String = {
+                    guard let url = organizer.url, let scheme = url.scheme else { return "" }
+                    return String(url.absoluteString.dropFirst(scheme.count + 1))
+                }()
+                
+                HStack {
+                    Image(systemName: "person")
+                        .frame(width:20)
+                        .scaledToFit()
+                    Text(url.isEmpty ? name : "\(name) (\(url))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+            
+            if let attendees = event.attendees, !attendees.isEmpty {
+                let attendeesText = attendees.map { participant -> String in
+                    let name = participant.name ?? ""
+                    
+                    let urlString: String
+                    if let url = participant.url, let scheme = url.scheme {
+                         urlString = String(url.absoluteString.dropFirst(scheme.count + 1))
+                    } else {
+                        urlString = ""
+                    }
+                    
+                    return "\(name)\(!urlString.isEmpty ? "(\(urlString))" : "")"
+                }.joined(separator: ", ")
+
+                HStack(alignment: .top) {
+                    Image(systemName: "person.2")
+                        .frame(width:20)
+                        .scaledToFit()
+                    Text(attendeesText)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+//                        .lineLimit(2)
                 }
             }
             
