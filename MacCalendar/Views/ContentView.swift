@@ -6,12 +6,20 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var calendarManager: CalendarManager
     
     var body: some View {
         VStack(spacing:0) {
+            HStack {
+                Spacer()
+                Button("打开系统日历") {
+                    openSystemCalendar()
+                }
+                .buttonStyle(.borderless)
+            }
             CalendarView(calendarManager: calendarManager)
             Divider()
                 .padding([.top,.bottom],10)
@@ -28,6 +36,16 @@ struct ContentView: View {
                     )
             }
         )
+    }
+
+    private func openSystemCalendar() {
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.iCal") {
+            NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration(), completionHandler: nil)
+            return
+        }
+        if let url = URL(string: "calshow://") {
+            NSWorkspace.shared.open(url)
+        }
     }
 }
 
