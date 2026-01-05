@@ -11,13 +11,21 @@ import EventKit
 
 @MainActor
 class CalendarManager: ObservableObject {
+    struct ReminderTodo: Identifiable, Hashable {
+        let id: String
+        let title: String
+        let isCompleted: Bool
+    }
+
     @Published var calendarDays: [CalendarDay] = []
     @Published var calendarInfos: [CalendarInfo] = []
     @Published var selectedMonth: Date = Date()
     @Published var selectedDay: Date = Date()
     @Published var selectedDayLunar:String = ""
     @Published var selectedDayEvents: [CalendarEvent] = []
+    @Published var selectedDayTodos: [ReminderTodo] = []
     @Published var authorizationStatus: EKAuthorizationStatus = .notDetermined
+    @Published var remindersAuthorizationStatus: EKAuthorizationStatus = .notDetermined
     @Published var weekdays:[String] = []
         
     private let calendar = Calendar.Based
@@ -119,12 +127,68 @@ class CalendarManager: ObservableObject {
         } else {
             selectedDayEvents = []
         }
+
+        Task {
+            await loadSelectedDayTodos(date: date)
+        }
     }
     
     func refreshEvents() {
         Task {
             await loadCalendarDays(date: selectedMonth)
             getSelectedDayEvents(date: selectedDay)
+        }
+    }
+
+    // MARK: Reminders / Todos
+
+    func addTodo(title: String, for date: Date) async {
+        await requestReminderAccess()
+        guard remindersAuthorizationStatus == .fullAccess || remindersAuthorizationStatus == .authorized else { return }
+
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let reminder = EKReminder(eventStore: eventStore)
+        reminder.title = trimmed
+
+        if let targetCalendar = eventStore.defaultCalendarForNewReminders() {
+            reminder.calendar = targetCalendar
+        }
+
+        reminder.dueDateComponents = Calendar.current.dateComponents([.year, .month, .day], from: date)
+
+        do {
+            try eventStore.save(reminder, commit: true)
+            await loadSelectedDayTodos(date: date)
+        } catch {
+        }
+    }
+
+    func toggleTodoCompleted(id: String, for date: Date) async {
+        await requestReminderAccess()
+        guard remindersAuthorizationStatus == .fullAccess || remindersAuthorizationStatus == .authorized else { return }
+
+        guard let item = eventStore.calendarItem(withIdentifier: id) as? EKReminder else { return }
+        item.isCompleted.toggle()
+        item.completionDate = item.isCompleted ? Date() : nil
+
+        do {
+            try eventStore.save(item, commit: true)
+            await loadSelectedDayTodos(date: date)
+        } catch {
+        }
+    }
+
+    func deleteTodo(id: String, for date: Date) async {
+        await requestReminderAccess()
+        guard remindersAuthorizationStatus == .fullAccess || remindersAuthorizationStatus == .authorized else { return }
+
+        guard let item = eventStore.calendarItem(withIdentifier: id) as? EKReminder else { return }
+        do {
+            try eventStore.remove(item, commit: true)
+            await loadSelectedDayTodos(date: date)
+        } catch {
         }
     }
     
@@ -245,6 +309,73 @@ class CalendarManager: ObservableObject {
             authorizationStatus = EKEventStore.authorizationStatus(for: .event)
         }
     }
+
+    private func requestReminderAccess() async {
+        if remindersAuthorizationStatus == .notDetermined {
+            remindersAuthorizationStatus = EKEventStore.authorizationStatus(for: .reminder)
+        }
+
+        guard remindersAuthorizationStatus == .notDetermined else { return }
+
+        do {
+            if #available(macOS 14.0, *) {
+                let granted = try await eventStore.requestFullAccessToReminders()
+                remindersAuthorizationStatus = granted ? .fullAccess : .denied
+            } else {
+                let granted = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
+                    eventStore.requestAccess(to: .reminder) { granted, error in
+                        if let error {
+                            continuation.resume(throwing: error)
+                        } else {
+                            continuation.resume(returning: granted)
+                        }
+                    }
+                }
+                remindersAuthorizationStatus = granted ? .authorized : .denied
+            }
+        } catch {
+            remindersAuthorizationStatus = .denied
+        }
+    }
+
+    private func loadSelectedDayTodos(date: Date) async {
+        await requestReminderAccess()
+        guard remindersAuthorizationStatus == .fullAccess || remindersAuthorizationStatus == .authorized else {
+            selectedDayTodos = []
+            return
+        }
+
+        let reminderCalendars = eventStore.calendars(for: .reminder)
+        let predicate = eventStore.predicateForReminders(in: reminderCalendars)
+
+        do {
+            let reminders = try await withCheckedThrowingContinuation { continuation in
+                eventStore.fetchReminders(matching: predicate) { reminders in
+                    continuation.resume(returning: reminders ?? [])
+                }
+            }
+
+            let targetDay = Calendar.Based.startOfDay(for: date)
+
+            let matched = reminders.filter { reminder in
+                guard let due = reminder.dueDateComponents?.date else { return false }
+                return Calendar.Based.isDate(Calendar.Based.startOfDay(for: due), inSameDayAs: targetDay)
+            }
+
+            let todos = matched
+                .map { ReminderTodo(id: $0.calendarItemIdentifier, title: $0.title, isCompleted: $0.isCompleted) }
+                .sorted { lhs, rhs in
+                    if lhs.isCompleted != rhs.isCompleted {
+                        return rhs.isCompleted == false
+                    }
+                    return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+                }
+
+            selectedDayTodos = todos
+        } catch {
+            selectedDayTodos = []
+        }
+    }
     func getDisplayName(participant: EKParticipant) -> String {
         let rawName = participant.name ?? ""
         if rawName.contains("@") {
@@ -256,13 +387,16 @@ class CalendarManager: ObservableObject {
         return rawName
     }
     private func getEventsByDate(from startDate: Date, to endDate: Date) async -> [CalendarEvent] {
-        var calendarsToFetch: [EKCalendar]? = nil
-        
+        let allCalendars = eventStore.calendars(for: .event)
+        let calendarsToFetch: [EKCalendar]
+
         if let ids = getFilterCalendarIds() {
-            let allCalendars = eventStore.calendars(for: .event)
             calendarsToFetch = allCalendars.filter { ids.contains($0.calendarIdentifier) }
+        } else {
+            calendarsToFetch = allCalendars
         }
-        if calendarsToFetch == nil || calendarsToFetch!.isEmpty{
+
+        if calendarsToFetch.isEmpty {
             return []
         }
         
@@ -309,10 +443,11 @@ class CalendarManager: ObservableObject {
     }
     
     private func getFilterCalendarIds() -> Set<String>? {
-        if let decodedIDs = try? JSONDecoder().decode([String].self, from: SettingsManager.filterCalendar) {
-            if SettingsManager.filterCalendar.isEmpty {
-                return nil
-            }
+        guard !SettingsManager.filterCalendar.isEmpty else {
+            return nil
+        }
+        if let decodedIDs = try? JSONDecoder().decode([String].self, from: SettingsManager.filterCalendar),
+           !decodedIDs.isEmpty {
             return Set(decodedIDs)
         }
         return nil

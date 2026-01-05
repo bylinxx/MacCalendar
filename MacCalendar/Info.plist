@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<dict>
+    <key>NSCalendarsUsageDescription</key>
+    <string>用于读取和展示你的系统日历事件。</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>用于在当日创建与管理提醒事项（Todo），并与系统数据保持一致。</string>
+</dict>
 </plist>

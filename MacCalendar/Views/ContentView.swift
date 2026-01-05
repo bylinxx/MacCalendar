@@ -19,6 +19,7 @@ struct ContentView: View {
                     openSystemCalendar()
                 }
                 .buttonStyle(.borderless)
+                Spacer()
             }
             CalendarView(calendarManager: calendarManager)
             Divider()
