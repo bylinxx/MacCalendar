@@ -1,0 +1,16 @@
+{
+  "source": "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsLaunchAtLoginView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "开机时自动启动",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 15
+        }
+      }
+    ]
+  },
+  "version": 1
+}

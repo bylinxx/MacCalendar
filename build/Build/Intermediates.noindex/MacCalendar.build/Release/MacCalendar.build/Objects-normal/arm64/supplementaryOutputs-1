@@ -1,0 +1,12 @@
+{
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Core/CalendarManager.swift" : {
+    "abi-baseline-json" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar.abi.json",
+    "const-values" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary.swiftconstvalues",
+    "dependencies" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary.d",
+    "diagnostics" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary.dia",
+    "objc-header" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-Swift.h",
+    "swiftdoc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar.swiftdoc",
+    "swiftmodule" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar.swiftmodule",
+    "swiftsourceinfo" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar.swiftsourceinfo"
+  }
+}

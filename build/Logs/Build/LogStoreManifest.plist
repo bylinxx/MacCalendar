@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>12</integer>
+	<key>logs</key>
+	<dict>
+		<key>6620F211-CF0C-429B-818C-0211870DFFD5</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>6620F211-CF0C-429B-818C-0211870DFFD5.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>MacCalendar project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>MacCalendar</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Cleaning project MacCalendar with scheme MacCalendar and configuration Release</string>
+			<key>timeStartedRecording</key>
+			<real>789295246.92311704</real>
+			<key>timeStoppedRecording</key>
+			<real>789295247.07536602</real>
+			<key>title</key>
+			<string>Cleaning project MacCalendar with scheme MacCalendar and configuration Release</string>
+			<key>uniqueIdentifier</key>
+			<string>6620F211-CF0C-429B-818C-0211870DFFD5</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

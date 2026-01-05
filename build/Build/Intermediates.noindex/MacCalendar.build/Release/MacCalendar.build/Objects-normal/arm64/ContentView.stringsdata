@@ -1,0 +1,16 @@
+{
+  "source": "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/ContentView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "打开系统日历",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 18
+        }
+      }
+    ]
+  },
+  "version": 1
+}

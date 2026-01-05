@@ -1,0 +1,56 @@
+{
+  "source": "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsIconView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "显示类型:",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "星期起始:",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "显示周数:",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "显示格式:",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 27
+        }
+      },
+      {
+        "comment": "",
+        "key": "自定义格式:",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 28
+        }
+      }
+    ]
+  },
+  "version": 1
+}

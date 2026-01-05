@@ -1,0 +1,16 @@
+{
+  "source": "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "应用设置",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 16
+        }
+      }
+    ]
+  },
+  "version": 1
+}

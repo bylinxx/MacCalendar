@@ -1,0 +1,48 @@
+{
+  "source": "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/CalendarView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "休",
+        "location": {
+          "startingColumn": 59,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "班",
+        "location": {
+          "startingColumn": 65,
+          "startingLine": 91
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "输入",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 145
+        }
+      }
+    ]
+  },
+  "version": 1
+}

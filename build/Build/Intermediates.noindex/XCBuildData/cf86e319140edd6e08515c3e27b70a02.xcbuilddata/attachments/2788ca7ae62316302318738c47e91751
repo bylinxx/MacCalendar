@@ -1,0 +1,186 @@
+{
+  "" : {
+    "const-values" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary.swiftconstvalues",
+    "dependencies" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary.d",
+    "diagnostics" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary.dia",
+    "emit-module-dependencies" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary-emit-module.dia",
+    "pch" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendar-primary.swiftdeps"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/AppDelegate.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/AppDelegate.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/AppDelegate.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/AppDelegate.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Core/CalendarManager.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarManager.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarManager.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarManager.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Core/LaunchAtLoginManager.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/LaunchAtLoginManager.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/LaunchAtLoginManager.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/LaunchAtLoginManager.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Core/SettingsManager.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsManager.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsManager.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsManager.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Core/TodoStore.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/TodoStore.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/TodoStore.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/TodoStore.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/FocusableHostingController.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/FocusableHostingController.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/FocusableHostingController.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/FocusableHostingController.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/MacCalendarApp.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendarApp.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendarApp.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/MacCalendarApp.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/AlertInfo.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/AlertInfo.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/AlertInfo.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/AlertInfo.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/CalendarDay.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarDay.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarDay.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarDay.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/CalendarError.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarError.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarError.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarError.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/CalendarEvent.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarEvent.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarEvent.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarEvent.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/CalendarIcon.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarIcon.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarIcon.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarIcon.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/CalendarInfo.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarInfo.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarInfo.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarInfo.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/OffdayData.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/OffdayData.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/OffdayData.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/OffdayData.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/SettingsType.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsType.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsType.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsType.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Models/TodoItem.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/TodoItem.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/TodoItem.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/TodoItem.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Utils/DateHelper.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/DateHelper.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/DateHelper.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/DateHelper.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Utils/Extensions.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/Extensions.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/Extensions.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/Extensions.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Utils/HolidayHelper.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/HolidayHelper.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/HolidayHelper.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/HolidayHelper.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Utils/LunarDateHelper.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/LunarDateHelper.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/LunarDateHelper.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/LunarDateHelper.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Utils/OffdayHelper.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/OffdayHelper.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/OffdayHelper.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/OffdayHelper.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Utils/SolarTermHelper.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SolarTermHelper.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SolarTermHelper.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SolarTermHelper.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Utils/UrlHelper.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/UrlHelper.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/UrlHelper.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/UrlHelper.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/CalendarView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/CalendarView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/ContentView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/ContentView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/EventDetailView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventDetailView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventDetailView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventDetailView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/EventEditView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventEditView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventEditView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventEditView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/EventListItemView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventListItemView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventListItemView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventListItemView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/EventListView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventListView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventListView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/EventListView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsAboutView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsAboutView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsAboutView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsAboutView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsCalendarView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsCalendarView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsCalendarView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsCalendarView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsIconView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsIconView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsIconView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsIconView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsLaunchAtLoginView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsLaunchAtLoginView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsLaunchAtLoginView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsLaunchAtLoginView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/MacCalendar/Views/SettingsView.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/SettingsView.o"
+  },
+  "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/kasoqian/Desktop/MacCalendar/build/Build/Intermediates.noindex/MacCalendar.build/Release/MacCalendar.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}
