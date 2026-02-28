@@ -28,7 +28,7 @@ struct LunarDateHelper {
      - Returns: 天干地支字符串，例如 "甲辰年"
      */
     static func getGanzhiYear(for date: Date) -> String {
-        return yearFormatter.string(from: date)
+        return yearFormatter.string(from: date) + "年"
     }
 
     /**

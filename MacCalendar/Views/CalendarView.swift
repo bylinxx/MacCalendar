@@ -47,16 +47,6 @@ struct CalendarView: View {
                         calendarManager: calendarManager, focusState: _focusedField,
                         equals: .month
                     )
-
-                    Button(action: {
-                        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.iCal") {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }) {
-                        Image(systemName: "calendar.badge.plus")
-                            .help("打开日历")
-                    }
-                    .buttonStyle(.plain)
                 }
                 Spacer()
                 Image(systemName: "chevron.compact.forward")

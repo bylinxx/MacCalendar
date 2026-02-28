@@ -73,6 +73,11 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
             menu.addItem(settingsItem)
             menu.addItem(NSMenuItem.separator())
+            let openCalendarItem = NSMenuItem(title: "系统日历", action: #selector(openSystemCalendar(_:)), keyEquivalent: "o")
+            openCalendarItem.image = NSImage(systemSymbolName: "calendar.badge.plus", accessibilityDescription: nil)
+            openCalendarItem.target = self
+            menu.addItem(openCalendarItem)
+            menu.addItem(NSMenuItem.separator())
             menu.addItem(NSMenuItem(title: "退出", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
             
             statusItem.menu = menu
@@ -80,6 +85,12 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             statusItem.menu = nil
         } else {
             togglePopover()
+        }
+    }
+    
+    @objc func openSystemCalendar(_ sender: NSMenuItem) {
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.iCal") {
+            NSWorkspace.shared.open(url)
         }
     }
     

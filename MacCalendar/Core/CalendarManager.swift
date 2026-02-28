@@ -406,7 +406,7 @@ class CalendarManager: ObservableObject {
             let ganzhiYear = LunarDateHelper.getGanzhiYear(for: day)
             let zodiac = LunarDateHelper.getZodiac(for: day)
             let short_lunar = (lunarDay == 1) ? lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
-            let full_lunar = "\(ganzhiYear)年 (\(zodiac)) \(lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
+            let full_lunar = "\(ganzhiYear) (\(zodiac)) \(lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
             
             let dayStart = calendar.startOfDay(for: day)
             let dayEvents = events[dayStart] ?? []
