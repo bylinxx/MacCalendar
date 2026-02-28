@@ -19,7 +19,7 @@ class CalendarManager: ObservableObject {
     @Published var selectedDayEvents: [CalendarEvent] = []
     @Published var authorizationStatus: EKAuthorizationStatus = .notDetermined
     @Published var weekdays:[String] = []
-        
+    
     private let calendar = Calendar.Based
     private let eventStore = EKEventStore()
     private var cancellables = Set<AnyCancellable>()
@@ -62,18 +62,20 @@ class CalendarManager: ObservableObject {
         if SettingsManager.weekNumberDisplayMode == .show {
             weekdays.insert("", at: 0)
         }
-        
-        goToCurrentMonth()
+        Task{
+            await goToCurrentMonth()
+        }
     }
-    
     func resetToToday() {
-        goToCurrentMonth()
-        getSelectedDayEvents(date: Date())
+        Task {
+            await goToCurrentMonth()
+            getSelectedDayEvents(date: Date())
+        }
     }
     
-    func goToCurrentMonth(){
+    func goToCurrentMonth() async {
         selectedMonth = Date()
-        Task { await loadCalendarDays(date: selectedMonth) }
+        await loadCalendarDays(date: selectedMonth)
     }
     
     func goToCustomizeMonth(year: Int, month: Int) {
@@ -268,7 +270,7 @@ class CalendarManager: ObservableObject {
         
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendarsToFetch)
         let ekEvents = eventStore.events(matching: predicate)
-                
+        
         return ekEvents.map { ekEvent in
             CalendarEvent(
                 id: ekEvent.eventIdentifier,
@@ -293,7 +295,7 @@ class CalendarManager: ObservableObject {
                         let name2 = person2.name ?? ""
                         return name1.localizedCaseInsensitiveCompare(name2) == .orderedAscending
                     }
-                    ?? []
+                ?? []
             )
         }
     }
@@ -322,7 +324,7 @@ class CalendarManager: ObservableObject {
         var groupedEvents = [Date: [CalendarEvent]]()
         
         for event in events {
-            var currentDay = calendar.startOfDay(for: event.startDate)            
+            var currentDay = calendar.startOfDay(for: event.startDate)
             while event.endDate > currentDay {
                 guard let nextDay = calendar.date(byAdding: .day, value: 1, to: currentDay) else {
                     break
@@ -396,8 +398,11 @@ class CalendarManager: ObservableObject {
         var newDays: [CalendarDay] = []
         
         for day in gridDates {
-            let lunarMonth = lunarCalendar.component(.month, from: day)
-            let lunarDay = lunarCalendar.component(.day, from: day)
+            let lunarDateComponents = lunarCalendar.dateComponents([.month,.day,.isLeapMonth], from: day)
+            let lunarMonth = lunarDateComponents.month ?? 1
+            let lunarDay = lunarDateComponents.day ?? 1
+            let lunarLeapMonth = lunarDateComponents.isLeapMonth
+            
             var daysInLunarMonth = 0
             if let range = lunarCalendar.range(of: .day, in: .month, for: day) {
                 daysInLunarMonth = range.count
@@ -405,8 +410,8 @@ class CalendarManager: ObservableObject {
             
             let ganzhiYear = LunarDateHelper.getGanzhiYear(for: day)
             let zodiac = LunarDateHelper.getZodiac(for: day)
-            let short_lunar = (lunarDay == 1) ? lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
-            let full_lunar = "\(ganzhiYear) (\(zodiac)) \(lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
+            let short_lunar = (lunarDay == 1) ? (lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
+            let full_lunar = "\(ganzhiYear) (\(zodiac)) \((lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
             
             let dayStart = calendar.startOfDay(for: day)
             let dayEvents = events[dayStart] ?? []
@@ -420,7 +425,7 @@ class CalendarManager: ObservableObject {
             let is_today = calendar.isDateInToday(day)
             
             let is_currentMonth = calendar.isDate(day, equalTo: self.selectedMonth, toGranularity: .month)
-
+            
             newDays.append(CalendarDay(is_today: is_today,is_currentMonth: is_currentMonth,date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term,offday: offday, events: dayEvents))
         }
         

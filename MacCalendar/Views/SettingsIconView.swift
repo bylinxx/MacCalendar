@@ -27,7 +27,7 @@ struct SettingsIconView: View {
                         Text("显示格式:")
                         TextField("自定义格式:", text: $customFormatString)
                     }
-                    Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，{GY}(干支年)，{GM}(干支月)，{LD}(农历日)")
+                    Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，{GY}(干支年)，{GM}(干支月)，{LM}(农历月)，{LD}(农历日)")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }

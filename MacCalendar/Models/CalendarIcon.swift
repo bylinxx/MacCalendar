@@ -160,18 +160,21 @@ class CalendarIcon: ObservableObject {
             displayOutput = dateFormatter.string(from: Date())
         case .custom:
             var format = SettingsManager.customFormatString
-            let hasLunarYear = format.contains("{GY}")
-            let hasLunarMonth = format.contains("{GM}")
+            let hasGanzhiYear = format.contains("{GY}")
+            let hasGanzhiMonth = format.contains("{GM}")
+            let hasLunarMonth = format.contains("{LM}")
             let hasLunarDay = format.contains("{LD}")
             
             // 使用纯符号替换农历变量
             let placeholderGY = "[[_~_]]"
             let placeholderGM = "[[_^_]]"
+            let placeholderLM = "[[_#_]]"
             let placeholderLD = "[[_*_]]"
             
             format = format
                 .replacingOccurrences(of: "{GY}", with: placeholderGY)
                 .replacingOccurrences(of: "{GM}", with: placeholderGM)
+                .replacingOccurrences(of: "{LM}", with: placeholderLM)
                 .replacingOccurrences(of: "{LD}", with: placeholderLD)
             
             dateFormatter.dateFormat = format
@@ -195,16 +198,20 @@ class CalendarIcon: ObservableObject {
             dateFormatter.calendar = originalCalendar
             
             // 替换农历变量占位符
-            if hasLunarYear || hasLunarMonth || hasLunarDay {
+            if hasGanzhiYear || hasGanzhiMonth || hasLunarMonth || hasLunarDay {
                 let ganzhiYear = LunarDateHelper.getGanzhiYear(for: currentDate)
                 let ganzhiMonth = LunarDateHelper.getGanzhiMonth(for: currentDate)
+                let lunarMonth = LunarDateHelper.getLunarMonth(for: currentDate)
                 let lunarDay = LunarDateHelper.getLunarDay(for: currentDate)
                 
-                if hasLunarYear {
+                if hasGanzhiYear {
                     result = result.replacingOccurrences(of: placeholderGY, with: ganzhiYear)
                 }
-                if hasLunarMonth {
+                if hasGanzhiMonth {
                     result = result.replacingOccurrences(of: placeholderGM, with: ganzhiMonth)
+                }
+                if hasLunarMonth {
+                    result = result.replacingOccurrences(of: placeholderLM, with: lunarMonth)
                 }
                 if hasLunarDay {
                     result = result.replacingOccurrences(of: placeholderLD, with: lunarDay)
