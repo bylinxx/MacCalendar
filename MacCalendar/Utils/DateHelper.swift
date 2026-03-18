@@ -10,15 +10,31 @@ import Foundation
 
 struct DateHelper{
     static func formatDate(date: Date, format: String, localeIdentifier: String = Locale.current.identifier) -> String {
-        var calendar = Calendar(identifier: .iso8601)
-        // ISO 8601 标准：周一为第一天，第一周至少4天
-        calendar.firstWeekday = 2 // 2 代表周一
-        calendar.minimumDaysInFirstWeek = 4
+        var calendar = Calendar(identifier: .gregorian)
+        let isMondayFirst = SettingsManager.firstDayInWeek == .monday
+        calendar.firstWeekday = isMondayFirst ? 2 : 1
+        calendar.minimumDaysInFirstWeek = 1
+        
+        // 如果是单纯请求周数，直接返回计算值，不走 Formatter
+        if format == "w" || format == "ww" {
+            let week = calendar.component(.weekOfYear, from: date)
+            return format == "ww" ? String(format: "%02d", week) : "\(week)"
+        }
+        
+        // 处理混合格式（例如 "第 w 周"）
+        var finalFormat = format
+        if format.contains("w") {
+            let week = calendar.component(.weekOfYear, from: date)
+            // 将格式字符串中的 w 或 ww 替换为真实计算的数字
+            finalFormat = format.replacingOccurrences(of: "ww", with: String(format: "%02d", week))
+                               .replacingOccurrences(of: "w", with: "\(week)")
+        }
         
         let formatter = DateFormatter()
-        formatter.calendar = calendar;
-        formatter.dateFormat = format
         formatter.locale = Locale(identifier: localeIdentifier)
+        formatter.calendar = calendar
+        formatter.dateFormat = finalFormat
+        
         return formatter.string(from: date)
     }
     

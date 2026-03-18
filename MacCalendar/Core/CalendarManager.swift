@@ -380,9 +380,13 @@ class CalendarManager: ObservableObject {
     private func calculateWeekOfYear(for date: Date?) -> Int {
         guard let date = date else { return 0 }
         
-        var calendar = Calendar(identifier: .iso8601)
-        calendar.firstWeekday = 2
-        calendar.minimumDaysInFirstWeek = 4
+        var calendar = Calendar(identifier: .gregorian)
+        
+        calendar.locale = Locale.current
+        
+        calendar.firstWeekday = SettingsManager.firstDayInWeek == .monday ? 2 : 1
+        
+        calendar.minimumDaysInFirstWeek = 1
         
         let week = calendar.component(.weekOfYear, from: date)
         
