@@ -15,7 +15,7 @@ struct ContentHeightPreferenceKey: PreferenceKey {
 }
 
 struct EventListView: View {
-    @ObservedObject var calendarManager: CalendarManager
+    @StateObject var calendarManager: CalendarManager
 
     @State private var contentHeight: CGFloat = 0
     

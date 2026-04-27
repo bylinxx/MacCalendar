@@ -14,46 +14,156 @@ struct SettingsIconView: View {
     @AppStorage("weekNumberDisplayMode") private var weekNumberDisplayMode: WeekNumberDisplayMode = SettingsManager.weekNumberDisplayMode
     
     var body: some View {
-        VStack(alignment: .leading,spacing:10) {
-            Picker("显示类型:", selection: $displayMode) {
-                ForEach(DisplayMode.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
-                }
-            }
-            
-            if displayMode == .custom {
-                Section {
-                    HStack{
-                        Text("显示格式:")
-                        TextField("自定义格式:", text: $customFormatString)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // 标题和描述
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .center, spacing: 12) {
+                        Image(systemName: "paintbrush")
+                            .font(.system(size: 24))
+                            .foregroundColor(.blue)
+                            .frame(width: 40, height: 40)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(12)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("个性化设置")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            Text("自定义应用的显示方式和行为")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
                     }
-                    Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
-                        .font(.caption)
-                        .foregroundColor(.gray)
                 }
-            }
-            
-            Divider()
-            
-            Picker("星期起始:", selection: $firstDayInWeek) {
-                ForEach(FirstDayInWeek.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
-                }
-            }
-            
-            Divider()
-            
-            Picker("显示周数:", selection: $weekNumberDisplayMode) {
-                            ForEach(WeekNumberDisplayMode.allCases) { mode in
-                                Text(mode.rawValue).tag(mode)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // 显示类型设置
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .center, spacing: 8) {
+                            Image(systemName: "eye")
+                                .foregroundColor(.secondary)
+                            Text("显示类型")
+                                .font(.headline)
+                        }
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(DisplayMode.allCases, id: \.self) { mode in
+                                HStack {
+                                    RadioButton(selected: displayMode == mode)
+                                    Text(mode.rawValue)
+                                        .font(.body)
+                                    Spacer()
+                                }
+                                .onTapGesture {
+                                    displayMode = mode
+                                }
+                                .contentShape(Rectangle())
                             }
                         }
-            
-            Spacer()
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                
+                // 自定义格式设置
+                if displayMode == .custom {
+                    SettingsCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(alignment: .center, spacing: 8) {
+                                Image(systemName: "textformat")
+                                    .foregroundColor(.secondary)
+                                Text("自定义格式")
+                                    .font(.headline)
+                            }
+                            TextField("输入自定义格式", text: $customFormatString)
+                                .textFieldStyle(.roundedBorder)
+                                .animation(.spring(), value: customFormatString)
+                            Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(nil)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .animation(.spring(), value: displayMode)
+                }
+                
+                // 星期起始设置
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .center, spacing: 8) {
+                            Image(systemName: "calendar")
+                                .foregroundColor(.secondary)
+                            Text("星期起始")
+                                .font(.headline)
+                        }
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(FirstDayInWeek.allCases, id: \.self) { day in
+                                HStack {
+                                    RadioButton(selected: firstDayInWeek == day)
+                                    Text(day.rawValue)
+                                        .font(.body)
+                                    Spacer()
+                                }
+                                .onTapGesture {
+                                    firstDayInWeek = day
+                                }
+                                .contentShape(Rectangle())
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                
+                // 周数显示设置
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .center, spacing: 8) {
+                            Image(systemName: "list.number")
+                                .foregroundColor(.secondary)
+                            Text("周数显示")
+                                .font(.headline)
+                        }
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(WeekNumberDisplayMode.allCases, id: \.self) { mode in
+                                HStack {
+                                    RadioButton(selected: weekNumberDisplayMode == mode)
+                                    Text(mode.rawValue)
+                                        .font(.body)
+                                    Spacer()
+                                }
+                                .onTapGesture {
+                                    weekNumberDisplayMode = mode
+                                }
+                                .contentShape(Rectangle())
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(24)
         }
+        .background(Color(.windowBackgroundColor))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-#Preview {
-    SettingsIconView()
+// 自定义单选按钮组件
+struct RadioButton: View {
+    let selected: Bool
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(selected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 2)
+                .frame(width: 20, height: 20)
+            if selected {
+                Circle()
+                    .fill(Color.blue)
+                    .frame(width: 10, height: 10)
+                    .animation(.spring(), value: selected)
+            }
+        }
+    }
 }

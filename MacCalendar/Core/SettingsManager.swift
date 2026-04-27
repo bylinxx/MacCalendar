@@ -33,7 +33,8 @@ enum WeekNumberDisplayMode: String, CaseIterable, Identifiable {
 }
 
 struct SettingsManager {
-    @AppStorage("launchAtLogin") private var launchAtLogin = false
+    @AppStorage("launchAtLogin") static var launchAtLogin = false
+    @AppStorage("startMinimized") static var startMinimized = false
     @AppStorage("displayMode") static var displayMode: DisplayMode = .icon
     @AppStorage("customFormatString") static var customFormatString: String = "yyyy-MM-dd"
     @AppStorage("filterCalendar") static var filterCalendar: Data = Data()

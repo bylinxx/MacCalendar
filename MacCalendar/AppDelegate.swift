@@ -16,7 +16,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     var popover: NSPopover!
     var settingsWindow: NSWindow?
     var eventEditWindow:NSWindow?
-    var calendarManager = CalendarManager()
+    // 使用@StateObject来管理CalendarManager的生命周期
+    lazy var calendarManager: CalendarManager = CalendarManager()
     
     private var resizeWorkItem:DispatchWorkItem?
     private var calendarIcon = CalendarIcon()
@@ -101,8 +102,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             } else {
                 calendarManager.resetToToday()
                 
-                let hostingController = FocusableHostingController(rootView: ContentView()
-                    .environmentObject(calendarManager)
+                let hostingController = FocusableHostingController(rootView: ContentView(calendarManager: self.calendarManager)
                     .onPreferenceChange(SizeKey.self){ size in
                         guard size != .zero else { return }
                         
@@ -136,7 +136,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     
     @objc func showSettingsWindow() {
         if settingsWindow == nil {
-            let settingsView = SettingsView().environmentObject(calendarManager)
+            let settingsView = SettingsView(calendarManager: self.calendarManager).environmentObject(self.calendarManager)
             
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 420, height: 300),

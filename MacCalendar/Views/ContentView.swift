@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var calendarManager: CalendarManager
+    @StateObject var calendarManager: CalendarManager
     
     var body: some View {
         VStack(spacing:0) {

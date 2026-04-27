@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @State private var selection:SettingsType? = .customized
+    @ObservedObject var calendarManager: CalendarManager
     
     var body: some View {
         HStack(spacing: 0) {
@@ -44,7 +45,8 @@ struct SettingsView: View {
                 selection?.view
             }
             .padding()
+            .environmentObject(calendarManager)
         }
-        .frame(width: 500, height: 350, alignment: .leading)
+        .frame(width: 600, height: 450, alignment: .leading)
     }
 }

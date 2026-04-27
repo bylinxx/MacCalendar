@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CalendarView: View {
-    @ObservedObject var calendarManager:CalendarManager
+    @StateObject var calendarManager:CalendarManager
         
     @FocusState private var focusedField: DateField?
 

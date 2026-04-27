@@ -10,21 +10,20 @@ import SwiftUI
 
 extension Calendar {
     static var Based: Calendar {
-        let calendar = Calendar(identifier: .gregorian)
-        return calendar
+        return Calendar(identifier: .gregorian)
     }
 }
 
-extension Bundle {
-    public var appVersion: String? {
-        return self.infoDictionary?["CFBundleShortVersionString"] as? String
+public extension Bundle {
+    var appVersion: String? {
+        return infoDictionary?["CFBundleShortVersionString"] as? String
     }
 
-    public var appBuildNumber: String? {
-        return self.infoDictionary?["CFBundleVersion"] as? String
+    var appBuildNumber: String? {
+        return infoDictionary?["CFBundleVersion"] as? String
     }
-    
-    public var fullVersion: String {
+
+    var fullVersion: String {
         let version = appVersion ?? "N/A"
         let build = appBuildNumber ?? "N/A"
         return "Version \(version) (\(build))"

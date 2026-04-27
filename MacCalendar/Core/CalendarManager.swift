@@ -24,6 +24,11 @@ class CalendarManager: ObservableObject {
     private let eventStore = EKEventStore()
     private var cancellables = Set<AnyCancellable>()
     
+    // 日历数据缓存，键为月份的开始日期
+    private var calendarDataCache: [Date: [CalendarDay]] = [:]
+    // 事件缓存，键为日期范围的开始和结束日期的字符串表示
+    private var eventsCache: [String: [CalendarEvent]] = [:]
+    
     init() {
         Task {
             await loadCalendarDays(date: selectedMonth)
@@ -124,6 +129,10 @@ class CalendarManager: ObservableObject {
     }
     
     func refreshEvents() {
+        // 清除缓存，确保获取最新数据
+        calendarDataCache.removeAll()
+        eventsCache.removeAll()
+        
         Task {
             await loadCalendarDays(date: selectedMonth)
             getSelectedDayEvents(date: selectedDay)
@@ -133,9 +142,22 @@ class CalendarManager: ObservableObject {
     func loadCalendarDays(date: Date) async {
         await requestAccess()
         
+        // 获取月份的开始日期作为缓存键
+        guard let monthStart = calendar.dateInterval(of: .month, for: date)?.start else {
+            return
+        }
+        
+        // 检查缓存中是否存在该月份的数据
+        if let cachedDays = calendarDataCache[monthStart] {
+            self.calendarDays = cachedDays
+            return
+        }
+        
         guard authorizationStatus == .fullAccess else {
             print("日历权限未授予，仅显示日期。")
             generateCalendarGrid(for: date, events: [:])
+            // 缓存无事件的日历数据
+            calendarDataCache[monthStart] = self.calendarDays
             return
         }
         
@@ -150,6 +172,8 @@ class CalendarManager: ObservableObject {
         let groupedEvents = groupEventsByDay(events: events)
         
         generateCalendarGrid(for: date, events: groupedEvents)
+        // 缓存日历数据
+        calendarDataCache[monthStart] = self.calendarDays
     }
     
     func loadCalendarInfo() async {
@@ -258,6 +282,12 @@ class CalendarManager: ObservableObject {
         return rawName
     }
     private func getEventsByDate(from startDate: Date, to endDate: Date) async -> [CalendarEvent] {
+        // 检查缓存中是否存在该日期范围的事件
+        let cacheKey = "\(startDate.timeIntervalSince1970)-\(endDate.timeIntervalSince1970)"
+        if let cachedEvents = eventsCache[cacheKey] {
+            return cachedEvents
+        }
+        
         var calendarsToFetch: [EKCalendar]? = nil
         
         if let ids = getFilterCalendarIds() {
@@ -271,7 +301,7 @@ class CalendarManager: ObservableObject {
         let predicate = eventStore.predicateForEvents(withStart: startDate, end: endDate, calendars: calendarsToFetch)
         let ekEvents = eventStore.events(matching: predicate)
         
-        return ekEvents.map { ekEvent in
+        let events = ekEvents.map { ekEvent in
             CalendarEvent(
                 id: ekEvent.eventIdentifier,
                 calendar_title: ekEvent.calendar.title,
@@ -298,6 +328,10 @@ class CalendarManager: ObservableObject {
                 ?? []
             )
         }
+        
+        // 缓存事件数据
+        eventsCache[cacheKey] = events
+        return events
     }
     
     private func setFilterCalendarIds() {
@@ -338,7 +372,7 @@ class CalendarManager: ObservableObject {
         return groupedEvents
     }
     
-    private func generateDateGrid(for date: Date) -> [Date]? {
+    private nonisolated func generateDateGrid(for date: Date) -> [Date]? {
         guard let monthInterval = calendar.dateInterval(of: .month, for: date) else { return nil }
         
         var gridDates: [Date] = []
@@ -377,7 +411,7 @@ class CalendarManager: ObservableObject {
         
         return gridDates
     }
-    private func calculateWeekOfYear(for date: Date?) -> Int {
+    private nonisolated func calculateWeekOfYear(for date: Date?) -> Int {
         guard let date = date else { return 0 }
         
         var calendar = Calendar(identifier: .gregorian)
@@ -393,65 +427,73 @@ class CalendarManager: ObservableObject {
         return week
     }
     private func generateCalendarGrid(for date: Date, events: [Date: [CalendarEvent]]) {
-        let lunarCalendar = Calendar(identifier: .chinese)
-        let lunarMonthSymbols = ["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"]
-        let lunarDaySymbols = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十", "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十", "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"]
-        
-        guard let gridDates = generateDateGrid(for: date) else { return }
-        
-        var newDays: [CalendarDay] = []
-        
-        for day in gridDates {
-            let lunarDateComponents = lunarCalendar.dateComponents([.month,.day,.isLeapMonth], from: day)
-            let lunarMonth = lunarDateComponents.month ?? 1
-            let lunarDay = lunarDateComponents.day ?? 1
-            let lunarLeapMonth = lunarDateComponents.isLeapMonth
+        // 在后台线程执行计算密集型操作
+        Task.detached { [weak self] in
+            guard let self = self else { return }
             
-            var daysInLunarMonth = 0
-            if let range = lunarCalendar.range(of: .day, in: .month, for: day) {
-                daysInLunarMonth = range.count
-            }
+            let lunarCalendar = Calendar(identifier: .chinese)
+            let lunarMonthSymbols = ["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"]
+            let lunarDaySymbols = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十", "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十", "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"]
             
-            let ganzhiYear = LunarDateHelper.getGanzhiYear(for: day)
-            let zodiac = LunarDateHelper.getZodiac(for: day)
-            let short_lunar = (lunarDay == 1) ? (lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
-            let full_lunar = "\(ganzhiYear) (\(zodiac)) \((lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
+            guard let gridDates = self.generateDateGrid(for: date) else { return }
             
-            let dayStart = calendar.startOfDay(for: day)
-            let dayEvents = events[dayStart] ?? []
+            var newDays: [CalendarDay] = []
             
-            let solar_term = SolarTermHelper.getSolarTerm(for: day)
-            
-            let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay, daysInLunarMonth: daysInLunarMonth)
-            
-            let offday = OffdayHelper.checkOffdayStatus(for: day)
-            
-            let is_today = calendar.isDateInToday(day)
-            
-            let is_currentMonth = calendar.isDate(day, equalTo: self.selectedMonth, toGranularity: .month)
-            
-            newDays.append(CalendarDay(is_today: is_today,is_currentMonth: is_currentMonth,date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term,offday: offday, events: dayEvents))
-        }
-        
-        var _newDays :[CalendarDay] = []
-        if SettingsManager.weekNumberDisplayMode == .show {
-            let day_groups = stride(from: 0, to: newDays.count, by: 7).map {
-                Array(newDays[$0..<min($0 + 7, newDays.count)])
-            }
-            
-            for group in day_groups {
-                let weekNum = calculateWeekOfYear(for: group.first?.date)
+            for day in gridDates {
+                let lunarDateComponents = lunarCalendar.dateComponents([.month,.day,.isLeapMonth], from: day)
+                let lunarMonth = lunarDateComponents.month ?? 1
+                let lunarDay = lunarDateComponents.day ?? 1
+                let lunarLeapMonth = lunarDateComponents.isLeapMonth
                 
-                let weekItem = CalendarDay(is_weekNumber:true,weekNumber:weekNum)
+                var daysInLunarMonth = 0
+                if let range = lunarCalendar.range(of: .day, in: .month, for: day) {
+                    daysInLunarMonth = range.count
+                }
                 
-                _newDays.append(weekItem)
-                _newDays.append(contentsOf: group)
+                let ganzhiYear = LunarDateHelper.getGanzhiYear(for: day)
+                let zodiac = LunarDateHelper.getZodiac(for: day)
+                let short_lunar = (lunarDay == 1) ? (lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
+                let full_lunar = "\(ganzhiYear) (\(zodiac)) \((lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
+                
+                let dayStart = self.calendar.startOfDay(for: day)
+                let dayEvents = events[dayStart] ?? []
+                
+                let solar_term = SolarTermHelper.getSolarTerm(for: day)
+                
+                let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay, daysInLunarMonth: daysInLunarMonth)
+                
+                let offday = OffdayHelper.checkOffdayStatus(for: day)
+                
+                let is_today = self.calendar.isDateInToday(day)
+                
+                let is_currentMonth = self.calendar.isDate(day, equalTo: date, toGranularity: .month)
+                
+                newDays.append(CalendarDay(is_today: is_today,is_currentMonth: is_currentMonth,date: day, short_lunar: short_lunar,full_lunar: full_lunar,holidays: holidays,solar_term: solar_term,offday: offday, events: dayEvents))
             }
             
-            self.calendarDays = _newDays
-        }
-        else{
-            self.calendarDays = newDays
+            var _newDays :[CalendarDay] = []
+            if SettingsManager.weekNumberDisplayMode == .show {
+                let day_groups = stride(from: 0, to: newDays.count, by: 7).map {
+                    Array(newDays[$0..<min($0 + 7, newDays.count)])
+                }
+                
+                for group in day_groups {
+                    let weekNum = self.calculateWeekOfYear(for: group.first?.date)
+                    
+                    let weekItem = CalendarDay(is_weekNumber:true,weekNumber:weekNum)
+                    
+                    _newDays.append(weekItem)
+                    _newDays.append(contentsOf: group)
+                }
+            }
+            else{
+                _newDays = newDays
+            }
+            
+            // 在主线程更新UI
+            await MainActor.run {
+                self.calendarDays = _newDays
+            }
         }
     }
 }
