@@ -11,6 +11,7 @@ enum SettingsType:String,CaseIterable,Identifiable{
     case customized = "个性化"
     case calendar = "日程显示"
     case launchAtLogin = "启动项"
+    case update = "检查更新"
     case about = "关于"
     
     var id:String {self.rawValue}
@@ -24,6 +25,8 @@ enum SettingsType:String,CaseIterable,Identifiable{
             SettingsCalendarView()
         case .launchAtLogin:
             SettingsLaunchAtLoginView()
+        case .update:
+            SettingsUpdateView()
         case .about:
             SettingsAboutView()
         }

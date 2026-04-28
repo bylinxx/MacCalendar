@@ -63,6 +63,11 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         popover.behavior = .transient
         
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: NSApplication.didResignActiveNotification, object: nil)
+        
+        // 应用启动时自动检查更新
+        Task {
+            await UpdateManager.shared.checkForUpdates(force: false)
+        }
     }
     
     @objc func statusItemClicked(sender: NSStatusBarButton) {
