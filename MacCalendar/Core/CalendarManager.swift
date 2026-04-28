@@ -73,6 +73,7 @@ class CalendarManager: ObservableObject {
     }
     func resetToToday() {
         Task {
+            calendarDataCache.removeAll()
             await goToCurrentMonth()
             getSelectedDayEvents(date: Date())
         }
