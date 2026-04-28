@@ -45,10 +45,15 @@ class UpdateManager: ObservableObject {
                 
                 if compareVersions(version, currentVersion) == .orderedDescending {
                     updateAvailable = true
-                    if let assets = release["assets"] as? [[String: Any]],
-                       let firstAsset = assets.first,
-                       let downloadUrl = firstAsset["browser_download_url"] as? String {
-                        downloadURL = URL(string: downloadUrl)
+                    if let assets = release["assets"] as? [[String: Any]] {
+                        // 查找DMG文件
+                        for asset in assets {
+                            if let downloadUrl = asset["browser_download_url"] as? String,
+                               downloadUrl.hasSuffix(".dmg") {
+                                downloadURL = URL(string: downloadUrl)
+                                break
+                            }
+                        }
                     }
                 } else {
                     updateAvailable = false
