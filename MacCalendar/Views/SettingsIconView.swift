@@ -10,6 +10,9 @@ import SwiftUI
 struct SettingsIconView: View {
     @AppStorage("displayMode") private var displayMode: DisplayMode = SettingsManager.displayMode
     @AppStorage("customFormatString") private var customFormatString: String = SettingsManager.customFormatString
+    @AppStorage("enableDoubleLine") private var enableDoubleLine: Bool = SettingsManager.enableDoubleLine
+    @AppStorage("doubleLineTopFormat") private var doubleLineTopFormat: String = SettingsManager.doubleLineTopFormat
+    @AppStorage("doubleLineBottomFormat") private var doubleLineBottomFormat: String = SettingsManager.doubleLineBottomFormat
     @AppStorage("firstDayInWeek") private var firstDayInWeek:FirstDayInWeek = SettingsManager.firstDayInWeek
     @AppStorage("weekNumberDisplayMode") private var weekNumberDisplayMode: WeekNumberDisplayMode = SettingsManager.weekNumberDisplayMode
     
@@ -74,9 +77,35 @@ struct SettingsIconView: View {
                                 Text("自定义格式")
                                     .font(.headline)
                             }
-                            TextField("输入自定义格式", text: $customFormatString)
-                                .textFieldStyle(.roundedBorder)
-                                .animation(.spring(), value: customFormatString)
+                            
+                            // 双行显示开关
+                            HStack {
+                                Image(systemName: "rectangle.grid.1x2")
+                                    .foregroundColor(.secondary)
+                                Text("双行显示")
+                                    .font(.body)
+                                Spacer()
+                                Toggle("", isOn: $enableDoubleLine)
+                                    .toggleStyle(.switch)
+                            }
+                            
+                            // 单行格式输入
+                            if !enableDoubleLine {
+                                TextField("输入自定义格式", text: $customFormatString)
+                                    .textFieldStyle(.roundedBorder)
+                                    .animation(.spring(), value: customFormatString)
+                            }
+                            
+                            // 双行格式输入
+                            if enableDoubleLine {
+                                VStack(spacing: 8) {
+                                    TextField("上行格式", text: $doubleLineTopFormat)
+                                        .textFieldStyle(.roundedBorder)
+                                    TextField("下行格式", text: $doubleLineBottomFormat)
+                                        .textFieldStyle(.roundedBorder)
+                                }
+                            }
+                            
                             Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -165,5 +194,6 @@ struct RadioButton: View {
                     .animation(.spring(), value: selected)
             }
         }
+        .contentShape(Circle())
     }
 }

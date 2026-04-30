@@ -33,6 +33,12 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             button.action = #selector(statusItemClicked)
             button.target = self
             button.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+            button.isHidden = false
+            // 初始显示图标
+            if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar") {
+                image.isTemplate = true
+                button.image = image
+            }
         }
         
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -46,17 +52,65 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         calendarIcon.$displayOutput
             .receive(on: DispatchQueue.main)
             .sink { [weak self] output in
-                guard let button = self?.statusItem.button else { return }
+                guard let self = self, let button = self.statusItem.button else { return }
+                
+                // 移除之前添加的自定义子视图
+                button.subviews.forEach { subview in
+                    if subview is DoubleLineStatusView {
+                        subview.removeFromSuperview()
+                    }
+                }
                 
                 if output == "" {
-                    button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")
+                    // 图标模式
                     button.title = ""
-                } else {
-                    button.title = output
+                    button.attributedTitle = NSAttributedString(string: "")
+                    if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar") {
+                        image.isTemplate = true
+                        button.image = image
+                    }
+                    self.statusItem.length = NSStatusItem.squareLength
+                } else if output.contains("\n") {
+                    // 双行显示，使用自定义视图添加到按钮上（按钮本身处理点击）
+                    let lines = output.components(separatedBy: "\n")
+                    let topText = lines.count > 0 ? lines[0] : ""
+                    let bottomText = lines.count > 1 ? lines[1] : ""
+                    
+                    // 创建双行视图（不处理点击，由按钮本身处理）
+                    let doubleLineView = DoubleLineStatusView(topText: topText, bottomText: bottomText)
+                    
+                    // 清空按钮内容
                     button.image = nil
+                    button.title = ""
+                    button.attributedTitle = NSAttributedString(string: "")
+                    
+                    // 设置按钮尺寸
+                    self.statusItem.length = doubleLineView.frame.width
+                    
+                    // 设置视图位置，两行居中显示（两行边界在中间）
+                    let centerY = (button.bounds.height - doubleLineView.frame.height) / 2
+                    doubleLineView.frame.origin = NSPoint(
+                        x: (button.bounds.width - doubleLineView.frame.width) / 2,
+                        y: centerY
+                    )
+                    
+                    // 添加到按钮（按钮本身处理点击）
+                    button.addSubview(doubleLineView)
+                    
+                } else {
+                    // 单行显示
+                    button.image = nil
+                    button.attributedTitle = NSAttributedString(string: "")
+                    button.title = output
+                    self.statusItem.length = NSStatusItem.variableLength
                 }
+                
+                button.sizeToFit()
             }
             .store(in: &cancellables)
+        
+        // 立即更新显示
+        calendarIcon.updateDisplayOutput()
         
         popover = NSPopover()
         popover.appearance = NSAppearance(named: .aqua)
@@ -71,6 +125,10 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     }
     
     @objc func statusItemClicked(sender: NSStatusBarButton) {
+        handleStatusItemClick()
+    }
+    
+    @objc func handleStatusItemClick() {
         guard let event = NSApp.currentEvent else { return }
         
         if event.type == .rightMouseUp {
@@ -197,5 +255,68 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
                 eventEditWindow = nil
             }
         }
+    }
+}
+
+// 双行显示的自定义状态栏视图
+class DoubleLineStatusView: NSView {
+    
+    init(topText: String, bottomText: String) {
+        super.init(frame: .zero)
+        
+        wantsLayer = true
+        
+        // 上行标签
+        let topLabel = NSTextField()
+        topLabel.stringValue = topText
+        topLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+        topLabel.textColor = NSColor.controlTextColor
+        topLabel.alignment = .center
+        topLabel.isBordered = false
+        topLabel.drawsBackground = false
+        topLabel.sizeToFit()
+        
+        // 下行标签
+        let bottomLabel = NSTextField()
+        bottomLabel.stringValue = bottomText
+        bottomLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+        bottomLabel.textColor = NSColor.controlTextColor
+        bottomLabel.alignment = .center
+        bottomLabel.isBordered = false
+        bottomLabel.drawsBackground = false
+        bottomLabel.sizeToFit()
+        
+        // 计算尺寸（紧凑布局，根据内容动态调整）
+        let width = max(topLabel.frame.width, bottomLabel.frame.width)
+        let height = topLabel.frame.height + bottomLabel.frame.height
+        
+        self.frame = NSRect(x: 0, y: 0, width: width, height: height)
+        
+        // 布局标签（两行紧密排列，无间距）
+        topLabel.frame = NSRect(
+            x: (width - topLabel.frame.width) / 2,
+            y: bottomLabel.frame.height - 2,  // 让上行底部稍微覆盖下行顶部
+            width: topLabel.frame.width,
+            height: topLabel.frame.height
+        )
+        
+        bottomLabel.frame = NSRect(
+            x: (width - bottomLabel.frame.width) / 2,
+            y: 0,
+            width: bottomLabel.frame.width,
+            height: bottomLabel.frame.height
+        )
+        
+        addSubview(topLabel)
+        addSubview(bottomLabel)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // 让鼠标事件传递给父视图（按钮）
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
     }
 }

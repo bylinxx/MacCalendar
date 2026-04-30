@@ -45,6 +45,9 @@ struct SettingsManager {
     @AppStorage("startMinimized") static var startMinimized = false
     @AppStorage("displayMode") static var displayMode: DisplayMode = .icon
     @AppStorage("customFormatString") static var customFormatString: String = "yyyy-MM-dd"
+    @AppStorage("enableDoubleLine") static var enableDoubleLine = false
+    @AppStorage("doubleLineTopFormat") static var doubleLineTopFormat: String = "HH:mm"
+    @AppStorage("doubleLineBottomFormat") static var doubleLineBottomFormat: String = "MM-dd"
     @AppStorage("filterCalendar") static var filterCalendar: Data = Data()
     @AppStorage("firstDayInWeek") static var firstDayInWeek:FirstDayInWeek = .monday
     @AppStorage("weekNumberDisplayMode") static var weekNumberDisplayMode: WeekNumberDisplayMode = .hide
