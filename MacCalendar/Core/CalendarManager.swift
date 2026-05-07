@@ -155,7 +155,6 @@ class CalendarManager: ObservableObject {
         }
         
         guard authorizationStatus == .fullAccess else {
-            print("日历权限未授予，仅显示日期。")
             generateCalendarGrid(for: date, events: [:])
             // 缓存无事件的日历数据
             calendarDataCache[monthStart] = self.calendarDays
@@ -265,7 +264,6 @@ class CalendarManager: ObservableObject {
             authorizationStatus = granted ? .fullAccess : .denied
         } catch {
             authorizationStatus = .denied
-            print("请求日历访问权限时出错: \(error.localizedDescription)")
         }
         
         if authorizationStatus == .notDetermined {

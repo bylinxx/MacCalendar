@@ -8,163 +8,271 @@
 import Foundation
 import Combine
 
-class UpdateManager: ObservableObject {
+class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
     static let shared = UpdateManager()
+
+    private let githubRepoURL = "https://api.github.com/repos/bylinxx/MacCalendar/releases/latest"
     
-    private let githubRepoURL = "https://api.github.com/repos/ruihelin/MacCalendar/releases/latest"
-    private let lastCheckDateKey = "LastUpdateCheckDate"
-    private let currentVersion = Bundle.main.appVersion ?? "1.0.0"
-    
+    private var currentVersion: String {
+        Bundle.main.appVersion ?? "1.0.0"
+    }
+
     @Published var isChecking = false
     @Published var isDownloading = false
     @Published var downloadProgress = 0.0
     @Published var latestVersion: String?
     @Published var updateAvailable = false
     @Published var downloadURL: URL?
-    
-    private init() {}
-    
-    func checkForUpdates(force: Bool = false) async {
+    @Published var downloadedFileURL: URL?  // 新增：保存下载后的本地文件路径
+    @Published var downloadError: String?
+
+    private var downloadCompletion: ((URL?, Error?) -> Void)?
+    private var pendingDownloadURL: URL?
+    private lazy var downloadSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        return URLSession(configuration: config, delegate: self, delegateQueue: .main)
+    }()
+
+    private override init() {
+        super.init()
+    }
+
+    func checkForUpdates() async {
         guard !isChecking else { return }
-        
-        let shouldCheck = await shouldPerformCheck()
-        if !force && !shouldCheck {
-            return
+
+        await MainActor.run {
+            isChecking = true
+            updateAvailable = false
+            downloadURL = nil
+            downloadedFileURL = nil
+            latestVersion = nil
+            downloadError = nil
         }
-        
-        isChecking = true
-        defer { isChecking = false }
-        
+
+        defer {
+            Task { @MainActor in
+                isChecking = false
+            }
+        }
+
         do {
-            let (data, _) = try await URLSession.shared.data(from: URL(string: githubRepoURL)!)
-            if let release = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-               let tagName = release["tag_name"] as? String {
+            let (data, response) = try await URLSession.shared.data(from: URL(string: githubRepoURL)!)
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                await MainActor.run {
+                    downloadError = "网络请求失败，状态码: \(httpResponse.statusCode)"
+                }
+                return
+            }
+            
+            if let release = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                if let message = release["message"] as? String {
+                    await MainActor.run {
+                        downloadError = message
+                    }
+                    return
+                }
                 
-                let version = tagName.replacingOccurrences(of: "v", with: "")
-                latestVersion = version
-                
-                if compareVersions(version, currentVersion) == .orderedDescending {
-                    updateAvailable = true
-                    if let assets = release["assets"] as? [[String: Any]] {
-                        // 查找DMG文件
-                        for asset in assets {
-                            if let downloadUrl = asset["browser_download_url"] as? String,
-                               downloadUrl.hasSuffix(".dmg") {
-                                downloadURL = URL(string: downloadUrl)
-                                break
+                if let tagName = release["tag_name"] as? String {
+                    let version = tagName.replacingOccurrences(of: "v", with: "")
+                    
+                    await MainActor.run {
+                        latestVersion = version
+                    }
+
+                    let comparisonResult = compareVersions(currentVersion, version)
+                    
+                    if comparisonResult == .orderedAscending {
+                        await MainActor.run {
+                            updateAvailable = true
+                        }
+                        if let assets = release["assets"] as? [[String: Any]] {
+                            for asset in assets {
+                                if let downloadUrl = asset["browser_download_url"] as? String,
+                                   downloadUrl.hasSuffix(".dmg") {
+                                    await MainActor.run {
+                                        self.downloadURL = URL(string: downloadUrl)
+                                    }
+                                    break
+                                }
                             }
                         }
                     }
-                } else {
-                    updateAvailable = false
                 }
             }
-            
-            UserDefaults.standard.set(Date(), forKey: lastCheckDateKey)
         } catch {
-            print("Failed to check for updates: \(error)")
+            await MainActor.run {
+                downloadError = error.localizedDescription
+            }
         }
     }
-    
-    private func shouldPerformCheck() async -> Bool {
-        let frequency = SettingsManager.updateCheckFrequency
-        if frequency == .off {
-            return false
-        }
-        
-        guard let lastCheck = UserDefaults.standard.object(forKey: lastCheckDateKey) as? Date else {
-            return true
-        }
-        
-        let now = Date()
-        let timeInterval = now.timeIntervalSince(lastCheck)
-        
-        switch frequency {
-        case .daily:
-            return timeInterval > 24 * 60 * 60
-        case .weekly:
-            return timeInterval > 7 * 24 * 60 * 60
-        case .off:
-            return false
-        }
-    }
-    
+
     private func compareVersions(_ v1: String, _ v2: String) -> ComparisonResult {
         let components1 = v1.components(separatedBy: ".").compactMap { Int($0) }
         let components2 = v2.components(separatedBy: ".").compactMap { Int($0) }
-        
+
         for i in 0..<max(components1.count, components2.count) {
             let c1 = i < components1.count ? components1[i] : 0
             let c2 = i < components2.count ? components2[i] : 0
-            
+
             if c1 < c2 { return .orderedAscending }
             if c1 > c2 { return .orderedDescending }
         }
-        
+
         return .orderedSame
     }
-    
+
     func downloadUpdate(completion: @escaping (URL?, Error?) -> Void) {
         guard let url = downloadURL, !isDownloading else {
             completion(nil, NSError(domain: "UpdateManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "No download URL available"]))
             return
         }
-        
+
+        downloadCompletion = completion
+        pendingDownloadURL = url
         isDownloading = true
         downloadProgress = 0.0
-        
-        let task = URLSession.shared.downloadTask(with: url) { [weak self] tempURL, response, error in
-            DispatchQueue.main.async {
-                self?.isDownloading = false
-                
-                if let error = error {
-                    completion(nil, error)
-                    return
-                }
-                
-                guard let tempURL = tempURL else {
-                    completion(nil, NSError(domain: "UpdateManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Download failed"]))
-                    return
-                }
-                
-                do {
-                    let downloadsDir = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-                    let destinationURL = downloadsDir.appendingPathComponent("MacCalendar.dmg")
-                    
-                    if FileManager.default.fileExists(atPath: destinationURL.path) {
-                        try FileManager.default.removeItem(at: destinationURL)
-                    }
-                    
-                    try FileManager.default.moveItem(at: tempURL, to: destinationURL)
-                    completion(destinationURL, nil)
-                } catch {
-                    completion(nil, error)
-                }
-            }
-        }
-        
+        downloadError = nil
+
+        let task = downloadSession.downloadTask(with: url)
         task.resume()
     }
-    
-    func installUpdate(from dmgURL: URL) {
-        let script = """
-        tell application "Finder"
-            mount volume POSIX file "\(dmgURL.path)"
-            delay 2
-            set sourceApp to POSIX path of (disk item "MacCalendar.app" of folder "MacCalendar" of disk "MacCalendar")
-            set destApp to POSIX path of (application file "MacCalendar.app" of folder "Applications" of startup disk)
-            do shell script "cp -Rf " & quoted form of sourceApp & " " & quoted form of destApp
-            delay 1
-            eject disk "MacCalendar"
-            do shell script "open /Applications/MacCalendar.app"
-        end tell
-        """
+
+    func cancelDownload() {
+        downloadSession.getAllTasks { tasks in
+            tasks.forEach { $0.cancel() }
+        }
+        isDownloading = false
+        downloadProgress = 0.0
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        let tempURL = location
+
+        do {
+            let appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let appDir = appSupportDir.appendingPathComponent("MacCalendar")
+            
+            if !FileManager.default.fileExists(atPath: appDir.path) {
+                try FileManager.default.createDirectory(at: appDir, withIntermediateDirectories: true)
+            }
+            
+            let destinationURL = appDir.appendingPathComponent("MacCalendar.dmg")
+
+            if FileManager.default.fileExists(atPath: destinationURL.path) {
+                try FileManager.default.removeItem(at: destinationURL)
+            }
+
+            try FileManager.default.moveItem(at: tempURL, to: destinationURL)
+
+            DispatchQueue.main.async {
+                self.isDownloading = false
+                self.downloadProgress = 1.0
+                self.downloadedFileURL = destinationURL  // 保存本地文件路径
+                self.downloadCompletion?(destinationURL, nil)
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.isDownloading = false
+                self.downloadCompletion?(nil, error)
+            }
+        }
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        guard totalBytesExpectedToWrite > 0 else { return }
+
+        let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+        DispatchQueue.main.async {
+            self.downloadProgress = progress
+        }
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        if let error = error {
+            DispatchQueue.main.async {
+                self.isDownloading = false
+                self.downloadError = error.localizedDescription
+                self.downloadCompletion?(nil, error)
+            }
+        }
+    }
+
+    func installUpdate(from dmgURL: URL, completion: @escaping (Bool, String?) -> Void) {
+        let dmgPathStr = dmgURL.path
         
-        var error: NSDictionary?
-        if let scriptObject = NSAppleScript(source: script) {
-            scriptObject.executeAndReturnError(&error)
-            if let error = error {
-                print("AppleScript error: \(error)")
+        guard FileManager.default.fileExists(atPath: dmgPathStr) else {
+            completion(false, "下载的文件不存在")
+            return
+        }
+        
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: dmgPathStr)
+            if let fileSize = attributes[.size] as? Int64 {
+                if fileSize < 1024 {
+                    completion(false, "下载的文件不完整，大小: \(fileSize) 字节")
+                    return
+                }
+            }
+        } catch {
+            completion(false, "无法获取文件信息: \(error.localizedDescription)")
+            return
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let task = Process()
+            task.launchPath = "/usr/bin/hdiutil"
+            task.arguments = ["attach", dmgPathStr, "-nobrowse", "-noverify"]
+            
+            let outputPipe = Pipe()
+            let errorPipe = Pipe()
+            task.standardOutput = outputPipe
+            task.standardError = errorPipe
+            
+            do {
+                try task.run()
+                task.waitUntilExit()
+                
+                let output = String(data: outputPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+                let errorOutput = String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+                
+                if task.terminationStatus == 0 {
+                    var mountPoint: String?
+                    for line in output.components(separatedBy: .newlines) {
+                        if let range = line.range(of: "/Volumes/") {
+                            mountPoint = String(line[range.lowerBound...])
+                            break
+                        }
+                    }
+                    
+                    Thread.sleep(forTimeInterval: 0.5)
+                    
+                    if let mp = mountPoint {
+                        let openTask = Process()
+                        openTask.launchPath = "/usr/bin/open"
+                        openTask.arguments = [mp]
+                        try? openTask.run()
+                        openTask.waitUntilExit()
+                    } else {
+                        let openTask = Process()
+                        openTask.launchPath = "/usr/bin/open"
+                        openTask.arguments = ["/Volumes"]
+                        try? openTask.run()
+                        openTask.waitUntilExit()
+                    }
+                    
+                    DispatchQueue.main.async {
+                        completion(true, nil)
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        completion(false, "挂载失败: exitCode=\(task.terminationStatus), error=\(errorOutput)")
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(false, "执行挂载命令失败: \(error.localizedDescription)")
+                }
             }
         }
     }

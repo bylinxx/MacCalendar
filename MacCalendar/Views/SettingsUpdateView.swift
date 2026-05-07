@@ -7,9 +7,19 @@
 
 import SwiftUI
 
+enum UpdateAlertType {
+    case checking
+    case noUpdate
+    case updateAvailable(String)
+    case downloading
+    case downloadComplete
+    case error(String)
+}
+
 struct SettingsUpdateView: View {
-    @AppStorage("updateCheckFrequency") private var updateCheckFrequency: UpdateCheckFrequency = SettingsManager.updateCheckFrequency
-    @StateObject private var updateManager = UpdateManager.shared
+    private var updateManager: UpdateManager { UpdateManager.shared }
+    @State private var showAlert = false
+    @State private var alertType: UpdateAlertType = .checking
     
     var body: some View {
         ScrollView {
@@ -27,46 +37,13 @@ struct SettingsUpdateView: View {
                             Text("检查更新")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                            Text("设置自动检查更新的频率")
+                            Text("检查应用更新")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // 检查更新频率设置
-                SettingsCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(alignment: .center, spacing: 8) {
-                            Image(systemName: "refresh")
-                                .foregroundColor(.secondary)
-                            Text("检查更新频率")
-                                .font(.headline)
-                        }
-                        
-                        // 单选按钮列表
-                        VStack(spacing: 8) {
-                            ForEach(UpdateCheckFrequency.allCases) { frequency in
-                                Button(action: {
-                                    updateCheckFrequency = frequency
-                                }) {
-                                    HStack(spacing: 12) {
-                                        RadioButton(selected: updateCheckFrequency == frequency)
-                                        Text(frequency.rawValue)
-                                            .font(.body)
-                                            .foregroundColor(updateCheckFrequency == frequency ? .primary : .secondary)
-                                        Spacer()
-                                    }
-                                    .padding(8)
-                                    .background(Color(.controlBackgroundColor))
-                                    .cornerRadius(8)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
                 
                 // 手动检查更新按钮
                 SettingsCard {
@@ -84,9 +61,7 @@ struct SettingsUpdateView: View {
                                 .foregroundColor(.secondary)
                             Spacer()
                             Button(action: {
-                                Task {
-                                    await updateManager.checkForUpdates(force: true)
-                                }
+                                checkForUpdates()
                             }) {
                                 if updateManager.isChecking {
                                     ProgressView()
@@ -98,71 +73,7 @@ struct SettingsUpdateView: View {
                                 }
                             }
                             .buttonStyle(.plain)
-                            .disabled(updateManager.isChecking)
-                        }
-                    }
-                }
-                
-                // 更新可用提示
-                if updateManager.updateAvailable, let latestVersion = updateManager.latestVersion {
-                    SettingsCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(alignment: .center, spacing: 8) {
-                                Image(systemName: "sparkles")
-                                    .foregroundColor(.green)
-                                Text("发现新版本")
-                                    .font(.headline)
-                                    .foregroundColor(.green)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("新版本 \(latestVersion) 已发布！")
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                
-                                if updateManager.isDownloading {
-                                    VStack(spacing: 8) {
-                                        ProgressView(value: updateManager.downloadProgress)
-                                            .progressViewStyle(.linear)
-                                        Text("正在下载...")
-                                            .font(.body)
-                                            .foregroundColor(.secondary)
-                                    }
-                                } else {
-                                    Button(action: {
-                                        updateManager.downloadUpdate { dmgURL, error in
-                                            if let dmgURL = dmgURL {
-                                                updateManager.installUpdate(from: dmgURL)
-                                            }
-                                        }
-                                    }) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "download")
-                                            Text("下载并安装")
-                                        }
-                                        .font(.body)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(Color.blue)
-                                        .cornerRadius(8)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // 当前已是最新版本提示
-                if !updateManager.updateAvailable && !updateManager.isChecking && updateManager.latestVersion != nil {
-                    SettingsCard {
-                        HStack(alignment: .center, spacing: 8) {
-                            Image(systemName: "checkmark.circle")
-                                .foregroundColor(.green)
-                            Text("当前已是最新版本")
-                                .font(.body)
-                                .foregroundColor(.secondary)
+                            .disabled(updateManager.isChecking || updateManager.isDownloading)
                         }
                     }
                 }
@@ -171,9 +82,69 @@ struct SettingsUpdateView: View {
         }
         .background(Color(.windowBackgroundColor))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            Task {
-                await updateManager.checkForUpdates(force: false)
+        .sheet(isPresented: $showAlert) {
+            UpdateAlertView(
+                updateManager: updateManager,
+                type: alertType,
+                onAction: handleAlertAction,
+                onDismiss: { showAlert = false }
+            )
+        }
+    }
+    
+    private func handleAlertAction() {
+        switch alertType {
+        case .updateAvailable:
+            downloadAndInstallUpdate()
+        case .downloadComplete, .error, .noUpdate:
+            showAlert = false
+        default:
+            break
+        }
+    }
+    
+    private func checkForUpdates() {
+        alertType = .checking
+        showAlert = true
+        
+        Task {
+            await updateManager.checkForUpdates()
+            
+            await MainActor.run {
+                if updateManager.updateAvailable, let version = updateManager.latestVersion {
+                    alertType = .updateAvailable(version)
+                } else if let error = updateManager.downloadError {
+                    alertType = .error(error)
+                } else {
+                    alertType = .noUpdate
+                }
+            }
+        }
+    }
+    
+    private func downloadAndInstallUpdate() {
+        alertType = .downloading
+        updateManager.downloadUpdate { dmgURL, error in
+            DispatchQueue.main.async {
+                if let dmgURL = dmgURL {
+                    self.alertType = .downloadComplete
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.installUpdate(from: dmgURL)
+                    }
+                } else if let error = error {
+                    self.alertType = .error(error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    private func installUpdate(from dmgURL: URL) {
+        updateManager.installUpdate(from: dmgURL) { success, errorMessage in
+            DispatchQueue.main.async {
+                if !success {
+                    self.alertType = .error(errorMessage ?? "安装失败")
+                }
             }
         }
     }

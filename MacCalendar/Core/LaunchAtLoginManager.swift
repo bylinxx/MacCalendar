@@ -21,7 +21,6 @@ struct LaunchAtLoginManager {
                     try SMAppService.mainApp.unregister()
                 }
             } catch {
-                print("设置登录项失败: \(error.localizedDescription)")
             }
         }
     }

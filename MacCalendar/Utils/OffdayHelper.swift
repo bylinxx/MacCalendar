@@ -15,7 +15,6 @@ public class OffdayHelper{
 
         guard let fileURL = Bundle.main.url(forResource: fileName,
                                             withExtension: "json") else {
-            print("找不到本地文件 \(fileName).json")
             return nil
         }
         
@@ -36,7 +35,6 @@ public class OffdayHelper{
             return nil
             
         } catch {
-            print("读取或解析失败: \(error)")
             return nil
         }
     }
