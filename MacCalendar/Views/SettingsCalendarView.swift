@@ -81,7 +81,10 @@ struct SettingsCalendarView: View {
                     SettingsCard {
                         VStack(alignment: .leading, spacing: 12) {
                             ForEach(calendarManager.calendarInfos) { calendar in
-                                HStack {
+                                HStack(spacing: 12) {
+                                    Circle()
+                                        .fill(calendar.color)
+                                        .frame(width: 12, height: 12)
                                     Text(calendar.title)
                                         .font(.body)
                                     Spacer()
