@@ -15,6 +15,7 @@ struct SettingsIconView: View {
     @AppStorage("doubleLineBottomFormat") private var doubleLineBottomFormat: String = SettingsManager.doubleLineBottomFormat
     @AppStorage("firstDayInWeek") private var firstDayInWeek:FirstDayInWeek = SettingsManager.firstDayInWeek
     @AppStorage("weekNumberDisplayMode") private var weekNumberDisplayMode: WeekNumberDisplayMode = SettingsManager.weekNumberDisplayMode
+    @AppStorage("showDaysIndicator") private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
     
     var body: some View {
         ScrollView {
@@ -166,6 +167,27 @@ struct SettingsIconView: View {
                                 }
                                 .contentShape(Rectangle())
                             }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                
+                // 天数指示器设置
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .center, spacing: 8) {
+                            Image(systemName: "calendar.days")
+                                .foregroundColor(.secondary)
+                            Text("显示天数指示器")
+                                .font(.headline)
+                        }
+                        HStack {
+                            Text("在事件列表中显示当前日期距离今天的天数")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Toggle("", isOn: $showDaysIndicator)
+                                .toggleStyle(.switch)
                         }
                     }
                 }

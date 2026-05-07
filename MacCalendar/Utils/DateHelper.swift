@@ -44,6 +44,26 @@ struct DateHelper{
     ///   - startDate: 起始日期。
     ///   - endDate: 结束日期。
     /// - Returns: 格式化后的时长字符串，例如 "5小时30分", "2小时", "45分"。
+    static func daysFromToday(to date: Date) -> String {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let targetDay = calendar.startOfDay(for: date)
+        let components = calendar.dateComponents([.day], from: today, to: targetDay)
+        let days = components.day ?? 0
+        
+        if days == 0 {
+            return "今天"
+        } else if days == 1 {
+            return "明天"
+        } else if days == -1 {
+            return "昨天"
+        } else if days > 0 {
+            return "距离今天 \(days) 天后"
+        } else {
+            return "距离今天 \(abs(days)) 天前"
+        }
+    }
+    
     static func formattedDuration(from startDate: Date, to endDate: Date) -> String? {
         // 为了确保结果为正数，自动识别较早和较晚的日期
         let earlierDate = min(startDate, endDate)

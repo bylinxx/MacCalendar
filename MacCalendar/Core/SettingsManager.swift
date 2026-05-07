@@ -52,4 +52,5 @@ struct SettingsManager {
     @AppStorage("firstDayInWeek") static var firstDayInWeek:FirstDayInWeek = .monday
     @AppStorage("weekNumberDisplayMode") static var weekNumberDisplayMode: WeekNumberDisplayMode = .hide
     @AppStorage("updateCheckFrequency") static var updateCheckFrequency: UpdateCheckFrequency = .weekly
+    @AppStorage("showDaysIndicator") static var showDaysIndicator = true
 }

@@ -122,11 +122,36 @@ class CalendarManager: ObservableObject {
             selectedDayLunar = ""
         }
         
+        var events: [CalendarEvent] = []
         if let day = _calendarDays.first(where: { Calendar.Based.isDate($0.date!, inSameDayAs: date) }) {
-            selectedDayEvents = day.events
-        } else {
-            selectedDayEvents = []
+            events = day.events
         }
+        
+        if SettingsManager.showDaysIndicator {
+            let dayIndicatorEvent = createDaysIndicatorEvent(date: date)
+            selectedDayEvents = [dayIndicatorEvent] + events
+        } else {
+            selectedDayEvents = events
+        }
+    }
+    
+    private func createDaysIndicatorEvent(date: Date) -> CalendarEvent {
+        let greenColor = Color(red: 0.2, green: 0.7, blue: 0.3)
+        return CalendarEvent(
+            id: "days-indicator-\(date.timeIntervalSince1970)",
+            calendar_title: nil,
+            allowsModify: false,
+            title: DateHelper.daysFromToday(to: date),
+            location: nil,
+            isAllDay: true,
+            startDate: date,
+            endDate: date,
+            color: CodableColor(color: greenColor),
+            notes: nil,
+            url: nil,
+            organizer: nil,
+            attendees: nil
+        )
     }
     
     func refreshEvents() {
