@@ -14,7 +14,7 @@ struct SettingsIconView: View {
     @AppStorage("doubleLineTopFormat") private var doubleLineTopFormat: String = SettingsManager.doubleLineTopFormat
     @AppStorage("doubleLineBottomFormat") private var doubleLineBottomFormat: String = SettingsManager.doubleLineBottomFormat
     @AppStorage("firstDayInWeek") private var firstDayInWeek:FirstDayInWeek = SettingsManager.firstDayInWeek
-    @AppStorage("weekNumberDisplayMode") private var weekNumberDisplayMode: WeekNumberDisplayMode = SettingsManager.weekNumberDisplayMode
+    @AppStorage("showWeekNumber") private var showWeekNumber: Bool = SettingsManager.showWeekNumber
     @AppStorage("showDaysIndicator") private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
     
     var body: some View {
@@ -45,9 +45,9 @@ struct SettingsIconView: View {
                 SettingsCard {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(alignment: .center, spacing: 8) {
-                            Image(systemName: "eye")
+                            Image(systemName: "menubar.rectangle")
                                 .foregroundColor(.secondary)
-                            Text("显示类型")
+                            Text("菜单栏显示")
                                 .font(.headline)
                         }
                         VStack(alignment: .leading, spacing: 8) {
@@ -73,7 +73,7 @@ struct SettingsIconView: View {
                     SettingsCard {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack(alignment: .center, spacing: 8) {
-                                Image(systemName: "textformat")
+                                Image(systemName: "rectangle.and.pencil.and.ellipsis")
                                     .foregroundColor(.secondary)
                                 Text("自定义格式")
                                     .font(.headline)
@@ -81,7 +81,7 @@ struct SettingsIconView: View {
                             
                             // 双行显示开关
                             HStack {
-                                Image(systemName: "rectangle.grid.1x2")
+                                Image(systemName: "equal.square")
                                     .foregroundColor(.secondary)
                                 Text("双行显示")
                                     .font(.body)
@@ -118,13 +118,13 @@ struct SettingsIconView: View {
                     .animation(.spring(), value: displayMode)
                 }
                 
-                // 星期起始设置
+                // 周起始日设置
                 SettingsCard {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(alignment: .center, spacing: 8) {
                             Image(systemName: "calendar")
                                 .foregroundColor(.secondary)
-                            Text("星期起始")
+                            Text("周起始日")
                                 .font(.headline)
                         }
                         VStack(alignment: .leading, spacing: 8) {
@@ -151,22 +151,16 @@ struct SettingsIconView: View {
                         HStack(alignment: .center, spacing: 8) {
                             Image(systemName: "list.number")
                                 .foregroundColor(.secondary)
-                            Text("周数显示")
+                            Text("显示周数")
                                 .font(.headline)
                         }
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(WeekNumberDisplayMode.allCases, id: \.self) { mode in
-                                HStack {
-                                    RadioButton(selected: weekNumberDisplayMode == mode)
-                                    Text(mode.rawValue)
-                                        .font(.body)
-                                    Spacer()
-                                }
-                                .onTapGesture {
-                                    weekNumberDisplayMode = mode
-                                }
-                                .contentShape(Rectangle())
-                            }
+                        HStack {
+                            Text("在日历中显示周数")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Toggle("", isOn: $showWeekNumber)
+                                .toggleStyle(.switch)
                         }
                     }
                 }
@@ -176,13 +170,13 @@ struct SettingsIconView: View {
                 SettingsCard {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(alignment: .center, spacing: 8) {
-                            Image(systemName: "calendar.days")
-                                .foregroundColor(.secondary)
-                            Text("显示天数指示器")
+                            Image(systemName: "clock")
+                            .foregroundColor(.secondary)
+                        Text("显示天数指示器")
                                 .font(.headline)
                         }
                         HStack {
-                            Text("在事件列表中显示当前日期距离今天的天数")
+                            Text("在日历中显示当天距离今天的天数")
                                 .font(.body)
                                 .foregroundColor(.secondary)
                             Spacer()

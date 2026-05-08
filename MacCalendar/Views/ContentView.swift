@@ -17,7 +17,7 @@ struct ContentView: View {
                 .padding([.top,.bottom],10)
             EventListView(calendarManager: calendarManager)
         }
-        .frame(width: SettingsManager.weekNumberDisplayMode == .show ? 345 : 310)
+        .frame(width: SettingsManager.showWeekNumber ? 345 : 310)
         .padding()
         .fixedSize()
         .overlay(

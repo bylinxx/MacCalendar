@@ -28,7 +28,7 @@ struct SettingsCalendarView: View {
                             Text("日历设置")
                                 .font(.title2)
                                 .fontWeight(.bold)
-                            Text("选择您想要在日历中显示的日历")
+                            Text("选择在日历中显示的日程类型")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }

@@ -34,8 +34,14 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             button.target = self
             button.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
             button.isHidden = false
-            // 初始显示图标
-            if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar") {
+            // 初始显示图标：根据当前日期显示对应日期的符号
+            let day = Calendar.current.component(.day, from: Date())
+            let symbolName = "\(day).calendar"
+            let config = NSImage.SymbolConfiguration(pointSize: 18, weight: .regular)
+            if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
+                image.isTemplate = true
+                button.image = image
+            } else if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
                 image.isTemplate = true
                 button.image = image
             }
@@ -62,12 +68,23 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
                 }
                 
                 if output == "" {
-                    // 图标模式
+                    // 图标模式：根据当前日期显示对应日期的符号
                     button.title = ""
                     button.attributedTitle = NSAttributedString(string: "")
-                    if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar") {
+                    
+                    let day = Calendar.current.component(.day, from: Date())
+                    let symbolName = "\(day).calendar"
+                    let config = NSImage.SymbolConfiguration(pointSize: 18, weight: .regular)
+                    
+                    if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
                         image.isTemplate = true
                         button.image = image
+                    } else {
+                        // 如果没有对应日期的图标，回退到默认日历图标
+                        if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
+                            image.isTemplate = true
+                            button.image = image
+                        }
                     }
                     self.statusItem.length = NSStatusItem.squareLength
                 } else if output.contains("\n") {

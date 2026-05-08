@@ -25,13 +25,6 @@ enum FirstDayInWeek:String,CaseIterable,Identifiable{
     var id:Self{self}
 }
 
-enum WeekNumberDisplayMode: String, CaseIterable, Identifiable {
-    case show = "显示"
-    case hide = "隐藏"
-
-    var id: Self { self }
-}
-
 enum UpdateCheckFrequency: String, CaseIterable, Identifiable {
     case daily = "每天"
     case weekly = "每周"
@@ -50,7 +43,7 @@ struct SettingsManager {
     @AppStorage("doubleLineBottomFormat") static var doubleLineBottomFormat: String = "MM-dd"
     @AppStorage("filterCalendar") static var filterCalendar: Data = Data()
     @AppStorage("firstDayInWeek") static var firstDayInWeek:FirstDayInWeek = .monday
-    @AppStorage("weekNumberDisplayMode") static var weekNumberDisplayMode: WeekNumberDisplayMode = .hide
+    @AppStorage("showWeekNumber") static var showWeekNumber = false
     @AppStorage("updateCheckFrequency") static var updateCheckFrequency: UpdateCheckFrequency = .weekly
     @AppStorage("showDaysIndicator") static var showDaysIndicator = true
 }

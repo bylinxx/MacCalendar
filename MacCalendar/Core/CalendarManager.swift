@@ -64,7 +64,7 @@ class CalendarManager: ObservableObject {
             weekdays = ["周日","周一", "周二", "周三", "周四", "周五", "周六"]
         }
         
-        if SettingsManager.weekNumberDisplayMode == .show {
+        if SettingsManager.showWeekNumber {
             weekdays.insert("", at: 0)
         }
         Task{
@@ -496,7 +496,7 @@ class CalendarManager: ObservableObject {
             }
             
             var _newDays :[CalendarDay] = []
-            if SettingsManager.weekNumberDisplayMode == .show {
+            if SettingsManager.showWeekNumber {
                 let day_groups = stride(from: 0, to: newDays.count, by: 7).map {
                     Array(newDays[$0..<min($0 + 7, newDays.count)])
                 }

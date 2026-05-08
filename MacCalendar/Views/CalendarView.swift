@@ -18,7 +18,7 @@ struct CalendarView: View {
     }
     
     var columns: [GridItem] {
-        let count = SettingsManager.weekNumberDisplayMode == .show ? 8 : 7
+        let count = SettingsManager.showWeekNumber ? 8 : 7
         return Array(repeating: GridItem(.flexible()), count: count)
     }
     let calendar = Calendar.Based
