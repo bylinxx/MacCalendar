@@ -107,7 +107,7 @@ struct UpdateAlertView: View {
         case .noUpdate: return "当前版本已是最新，无需更新。"
         case .updateAvailable: return "新版本已发布，点击下方按钮下载并安装更新。"
         case .downloading: return "请稍候，正在下载更新包..."
-        case .downloadComplete: return "更新包已下载完成，安装窗口已打开。请将应用拖放到 Applications 文件夹完成安装。"
+        case .downloadComplete: return "更新包已下载完成，请退出当前App再将新版本App拖放到 Applications 文件夹内替换完成安装。"
         case .error(let error): return error
         }
     }
