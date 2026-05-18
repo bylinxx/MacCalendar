@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject var calendarManager: CalendarManager
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
     
     var body: some View {
         VStack(spacing:0) {
@@ -28,6 +29,7 @@ struct ContentView: View {
                     )
             }
         )
+        .preferredColorScheme(appearanceMode.colorScheme)
     }
 }
 
