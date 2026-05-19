@@ -22,65 +22,33 @@ struct SettingsUpdateView: View {
     @State private var alertType: UpdateAlertType = .checking
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 30) {
-                // 标题和描述
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .center, spacing: 12) {
-                        Image(systemName: "arrow.down.circle")
-                            .font(.system(size: 24))
-                            .foregroundColor(.blue)
-                            .frame(width: 40, height: 40)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(12)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("检查更新")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            Text("检查应用更新")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                    }
+        Form {
+            Section {
+                HStack {
+                    Text("当前版本")
+                    Spacer()
+                    Text(Bundle.main.appVersion ?? "1.0.0")
+                        .foregroundColor(.secondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                // 手动检查更新按钮
-                SettingsCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(alignment: .center, spacing: 8) {
-                            Image(systemName: "search")
-                                .foregroundColor(.secondary)
+                HStack {
+                    Text("检查更新")
+                    Spacer()
+                    Button(action: {
+                        checkForUpdates()
+                    }) {
+                        if updateManager.isChecking {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
                             Text("检查更新")
-                                .font(.headline)
-                        }
-                        
-                        HStack {
-                            Text("当前版本: \(Bundle.main.appVersion ?? "1.0.0")")
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Button(action: {
-                                checkForUpdates()
-                            }) {
-                                if updateManager.isChecking {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                } else {
-                                    Text("检查更新")
-                                        .font(.body)
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(updateManager.isChecking || updateManager.isDownloading)
                         }
                     }
+                    .disabled(updateManager.isChecking || updateManager.isDownloading)
                 }
             }
-            .padding(24)
         }
-        .background(Color(.windowBackgroundColor))
+        .formStyle(.grouped)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $showAlert) {
             UpdateAlertView(
