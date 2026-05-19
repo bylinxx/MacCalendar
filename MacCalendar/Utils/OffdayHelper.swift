@@ -7,35 +7,34 @@
 
 import Foundation
 
-public class OffdayHelper{
+public class OffdayHelper {
+    private static var cache: [Int: OffdayDataResponse] = [:]
+    private static let formatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+    
     public static func checkOffdayStatus(for date: Date) -> Bool? {
         let calendar = Calendar.current
         let year = calendar.component(.year, from: date)
-        let fileName = "\(year)"
-
-        guard let fileURL = Bundle.main.url(forResource: fileName,
-                                            withExtension: "json") else {
-            return nil
+        
+        let response: OffdayDataResponse
+        if let cached = cache[year] {
+            response = cached
+        } else {
+            let fileName = "\(year)"
+            guard let fileURL = Bundle.main.url(forResource: fileName, withExtension: "json"),
+                  let data = try? Data(contentsOf: fileURL),
+                  let decoded = try? JSONDecoder().decode(OffdayDataResponse.self, from: data) else {
+                return nil
+            }
+            cache[year] = decoded
+            response = decoded
         }
         
-        do {
-            let data = try Data(contentsOf: fileURL)
-            
-            let decodedResponse = try JSONDecoder().decode(OffdayDataResponse.self, from: data)
-            
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            let dateString = formatter.string(from: date)
-            
-            if let targetDay = decodedResponse.days.first(where: { $0.date == dateString }) {
-                return targetDay.isOffDay
-            }
-            
-            return nil
-            
-        } catch {
-            return nil
-        }
+        let dateString = formatter.string(from: date)
+        return response.days.first(where: { $0.date == dateString })?.isOffDay
     }
 }

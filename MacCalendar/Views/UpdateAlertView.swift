@@ -97,7 +97,7 @@ struct UpdateAlertView: View {
         case .updateAvailable(let version): return "发现新版本 \(version)"
         case .downloading: return "正在下载..."
         case .downloadComplete: return "下载完成"
-        case .error(let error): return "错误"
+        case .error: return "错误"
         }
     }
     
