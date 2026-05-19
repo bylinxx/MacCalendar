@@ -16,6 +16,7 @@ struct SettingsIconView: View {
     @AppStorage("firstDayInWeek") private var firstDayInWeek:FirstDayInWeek = SettingsManager.firstDayInWeek
     @AppStorage("showWeekNumber") private var showWeekNumber: Bool = SettingsManager.showWeekNumber
     @AppStorage("showDaysIndicator") private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
     
     var body: some View {
         ScrollView {
@@ -40,6 +41,33 @@ struct SettingsIconView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // 外观模式设置
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .center, spacing: 8) {
+                            Image(systemName: "circle.lefthalf.filled")
+                                .foregroundColor(.secondary)
+                            Text("外观模式")
+                                .font(.headline)
+                        }
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                                HStack {
+                                    RadioButton(selected: appearanceMode == mode)
+                                    Text(mode.rawValue)
+                                        .font(.body)
+                                    Spacer()
+                                }
+                                .onTapGesture {
+                                    appearanceMode = mode
+                                }
+                                .contentShape(Rectangle())
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
                 
                 // 显示类型设置
                 SettingsCard {

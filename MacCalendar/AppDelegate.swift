@@ -23,6 +23,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     private var calendarIcon = CalendarIcon()
     private var cancellables = Set<AnyCancellable>()
     
+    private var appearanceObserver: NSObjectProtocol?
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         
@@ -130,10 +132,26 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         calendarIcon.updateDisplayOutput()
         
         popover = NSPopover()
-        popover.appearance = NSAppearance(named: .aqua)
         popover.behavior = .transient
+        updateAppearance()
+        
+        // 监听外观设置变化
+        appearanceObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateAppearance()
+        }
         
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: NSApplication.didResignActiveNotification, object: nil)
+    }
+    
+    private func updateAppearance() {
+        let mode = SettingsManager.appearanceMode
+        popover.appearance = mode.nsAppearance
+        settingsWindow?.appearance = mode.nsAppearance
+        eventEditWindow?.appearance = mode.nsAppearance
     }
     
     @objc func statusItemClicked(sender: NSStatusBarButton) {
@@ -211,7 +229,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     
     @objc func showSettingsWindow() {
         if settingsWindow == nil {
-            let settingsView = SettingsView(calendarManager: self.calendarManager).environmentObject(self.calendarManager)
+            let settingsView = SettingsView(calendarManager: self.calendarManager)
+                .environmentObject(self.calendarManager)
             
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 420, height: 300),
@@ -225,6 +244,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             settingsWindow = window
         }
         
+        updateAppearance()
         NSApp.activate(ignoringOtherApps: true)
         settingsWindow?.makeKeyAndOrderFront(nil)
     }

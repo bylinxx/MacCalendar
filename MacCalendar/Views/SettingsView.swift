@@ -10,6 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     @State private var selection:SettingsType? = .customized
     @ObservedObject var calendarManager: CalendarManager
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
     
     var body: some View {
         HStack(spacing: 0) {
@@ -48,5 +49,6 @@ struct SettingsView: View {
             .environmentObject(calendarManager)
         }
         .frame(width: 600, height: 450, alignment: .leading)
+        .preferredColorScheme(appearanceMode.colorScheme)
     }
 }

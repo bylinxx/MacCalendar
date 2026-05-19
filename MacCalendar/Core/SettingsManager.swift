@@ -33,6 +33,36 @@ enum UpdateCheckFrequency: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+enum AppearanceMode: String, CaseIterable, Identifiable {
+    case light = "亮色"
+    case dark = "暗色"
+    case system = "跟随系统"
+    
+    var id: Self { self }
+    
+    var nsAppearance: NSAppearance? {
+        switch self {
+        case .light:
+            return NSAppearance(named: .aqua)
+        case .dark:
+            return NSAppearance(named: .darkAqua)
+        case .system:
+            return NSAppearance.currentDrawing()
+        }
+    }
+    
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .light:
+            return .light
+        case .dark:
+            return .dark
+        case .system:
+            return NSAppearance.currentDrawing().name == .darkAqua ? .dark : .light
+        }
+    }
+}
+
 struct SettingsManager {
     @AppStorage("launchAtLogin") static var launchAtLogin = false
     @AppStorage("startMinimized") static var startMinimized = false
@@ -46,4 +76,5 @@ struct SettingsManager {
     @AppStorage("showWeekNumber") static var showWeekNumber = false
     @AppStorage("updateCheckFrequency") static var updateCheckFrequency: UpdateCheckFrequency = .weekly
     @AppStorage("showDaysIndicator") static var showDaysIndicator = true
+    @AppStorage("appearanceMode") static var appearanceMode: AppearanceMode = .system
 }
