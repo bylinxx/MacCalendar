@@ -139,7 +139,6 @@ struct EventEditView: View {
         .frame(width: 480, height: 450)
         .navigationTitle("编辑日程")
         .disabled(editedEvent.allowsModify == false)
-        .preferredColorScheme(appearanceMode.colorScheme)
         .alert("放弃修改", isPresented: $showingResetConfirmation) {
             Button("放弃", role: .destructive) {
                 editedEvent = event

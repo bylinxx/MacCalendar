@@ -47,7 +47,7 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
         case .dark:
             return NSAppearance(named: .darkAqua)
         case .system:
-            return NSAppearance.currentDrawing()
+            return nil
         }
     }
     
@@ -58,7 +58,7 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
         case .dark:
             return .dark
         case .system:
-            return NSAppearance.currentDrawing().name == .darkAqua ? .dark : .light
+            return nil
         }
     }
 }
