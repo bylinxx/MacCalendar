@@ -16,6 +16,16 @@ enum SettingsType:String,CaseIterable,Identifiable{
     
     var id:String {self.rawValue}
     
+    var icon: String {
+        switch self {
+        case .customized: return "paintbrush"
+        case .calendar: return "calendar"
+        case .launchAtLogin: return "power"
+        case .update: return "arrow.down.circle"
+        case .about: return "info.circle"
+        }
+    }
+    
     @ViewBuilder
     var view:some View {
         switch self {

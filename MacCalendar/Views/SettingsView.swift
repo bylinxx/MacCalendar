@@ -8,47 +8,24 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State private var selection:SettingsType? = .customized
+    @State private var selection: SettingsType = .customized
     @ObservedObject var calendarManager: CalendarManager
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
     
     var body: some View {
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text("应用设置")
-                    .font(.headline)
-                    .padding(.horizontal)
-                    .padding(.bottom, 10)
-                
-                ForEach(SettingsType.allCases) { setting in
-                    Button(action: {
-                        selection = setting
-                    }) {
-                        Text(setting.rawValue)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal)
-                            .padding(.vertical, 8)
-                            .background(selection == setting ? Color.blue.opacity(0.8) : Color.clear)
-                            .foregroundColor(selection == setting ? .white : .primary)
-                            .contentShape(Rectangle())
-                            .cornerRadius(6)
-                    }
-                    .buttonStyle(.plain)
-                }
-                Spacer()
+        NavigationSplitView {
+            List(SettingsType.allCases, selection: $selection) { setting in
+                Label(setting.rawValue, systemImage: setting.icon)
+                    .tag(setting)
             }
-            .padding(10)
-            .frame(width: 120)
-            
-            Divider()
-            
-            ZStack {
-                selection?.view
-            }
-            .padding()
-            .environmentObject(calendarManager)
+            .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(min: 160, ideal: 180, max: 200)
+        } detail: {
+            selection.view
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .environmentObject(calendarManager)
+                .navigationTitle(selection.rawValue)
         }
-        .frame(width: 600, height: 450, alignment: .leading)
         .preferredColorScheme(appearanceMode.colorScheme)
     }
 }

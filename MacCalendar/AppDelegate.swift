@@ -233,11 +233,12 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
                 .environmentObject(self.calendarManager)
             
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 420, height: 300),
-                styleMask: [.titled, .closable],
+                contentRect: NSRect(x: 0, y: 0, width: 620, height: 450),
+                styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
                 backing: .buffered,
                 defer: false
             )
+            window.title = "偏好设置"
             window.center()
             window.isReleasedWhenClosed = false
             window.contentView = NSHostingView(rootView: settingsView)
