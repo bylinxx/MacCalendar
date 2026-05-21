@@ -285,7 +285,7 @@ class CalendarManager: ObservableObject {
             .store(in: &cancellables)
     }
     
-    private func requestAccessIfNeeded() async {
+    func requestAccessIfNeeded() async {
         let status = EKEventStore.authorizationStatus(for: .event)
         authorizationStatus = status
         
@@ -372,10 +372,7 @@ class CalendarManager: ObservableObject {
     }
     
     private func getFilterCalendarIds() -> Set<String>? {
-        if let decodedIDs = try? JSONDecoder().decode([String].self, from: SettingsManager.filterCalendar) {
-            if SettingsManager.filterCalendar.isEmpty {
-                return nil
-            }
+        if let decodedIDs = try? JSONDecoder().decode([String].self, from: SettingsManager.filterCalendar), !decodedIDs.isEmpty {
             return Set(decodedIDs)
         }
         return nil

@@ -11,6 +11,7 @@ import EventKit
 struct SettingsCalendarView: View {
     @EnvironmentObject var calendarManager: CalendarManager
     @State private var isAccessDenied = false
+    @State private var isAccessNotDetermined = false
     
     var body: some View {
         Form {
@@ -30,6 +31,31 @@ struct SettingsCalendarView: View {
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars")!)
                         }) {
                             Text("前往系统设置")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                }
+            } else if isAccessNotDetermined {
+                Section {
+                    VStack(alignment: .center, spacing: 16) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                        Text("需要日历访问权限")
+                            .font(.headline)
+                        Text("请允许此应用访问您的日历以显示日程事件")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        Button(action: {
+                            Task {
+                                await calendarManager.requestAccessIfNeeded()
+                                await calendarManager.loadCalendarInfo()
+                                updateAccessStatus()
+                            }
+                        }) {
+                            Text("请求权限")
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -79,10 +105,12 @@ struct SettingsCalendarView: View {
         .formStyle(.grouped)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
-            Task {
-                await calendarManager.loadCalendarInfo()
-                isAccessDenied = calendarManager.authorizationStatus != .fullAccess && calendarManager.authorizationStatus != .notDetermined
-            }
+            updateAccessStatus()
         }
+    }
+    
+    private func updateAccessStatus() {
+        isAccessDenied = calendarManager.authorizationStatus == .denied
+        isAccessNotDetermined = calendarManager.authorizationStatus == .notDetermined
     }
 }
