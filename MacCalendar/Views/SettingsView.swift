@@ -26,6 +26,5 @@ struct SettingsView: View {
                 .environmentObject(calendarManager)
                 .navigationTitle(selection.rawValue)
         }
-        .preferredColorScheme(appearanceMode.colorScheme)
     }
 }

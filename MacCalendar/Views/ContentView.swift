@@ -29,7 +29,6 @@ struct ContentView: View {
                     )
             }
         )
-        .preferredColorScheme(appearanceMode.colorScheme)
     }
 }
 
