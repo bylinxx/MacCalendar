@@ -258,8 +258,9 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         }
         
         updateAppearance()
-        NSApp.activate(ignoringOtherApps: true)
         settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.orderFrontRegardless()
     }
     
     func openEventEditWindow(event: CalendarEvent) {
