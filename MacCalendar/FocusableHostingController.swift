@@ -10,10 +10,5 @@ import SwiftUI
 class FocusableHostingController<Content: View>: NSHostingController<Content> {
     override func viewDidAppear() {
         super.viewDidAppear()
-        self.view.window?.makeKeyAndOrderFront(nil)
-    }
-    
-    deinit{
-        
     }
 }

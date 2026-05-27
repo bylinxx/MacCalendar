@@ -16,17 +16,20 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     var popover: NSPopover!
     var settingsWindow: NSWindow?
     var eventEditWindow:NSWindow?
-    // 使用@StateObject来管理CalendarManager的生命周期
+    var hostingController: NSHostingController<AnyView>?
     lazy var calendarManager: CalendarManager = CalendarManager()
     
     private var resizeWorkItem:DispatchWorkItem?
     private var calendarIcon = CalendarIcon()
     private var cancellables = Set<AnyCancellable>()
+    private var isPopoverAnimating = false
     
     private var appearanceObserver: NSObjectProtocol?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
+        
+        _ = calendarManager
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
@@ -133,6 +136,25 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         
         popover = NSPopover()
         popover.behavior = .transient
+        
+        let contentView = ContentView(calendarManager: self.calendarManager)
+            .onPreferenceChange(SizeKey.self){ size in
+                guard size != .zero else { return }
+                
+                self.resizeWorkItem?.cancel()
+                
+                let workItem = DispatchWorkItem{
+                    guard self.popover.isShown else { return }
+                    self.popover.contentSize = size
+                }
+                
+                self.resizeWorkItem = workItem
+                // 延迟80ms执行
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
+            }
+        hostingController = NSHostingController(rootView: AnyView(contentView))
+        popover.contentViewController = hostingController
+        
         updateAppearance()
         
         // 监听外观设置变化
@@ -189,35 +211,25 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     }
     
     @objc func togglePopover() {
-        if let button = statusItem.button {
-            if popover.isShown {
-                popover.performClose(nil)
-            } else {
-                calendarManager.resetToToday()
-                
-                let hostingController = FocusableHostingController(rootView: ContentView(calendarManager: self.calendarManager)
-                    .onPreferenceChange(SizeKey.self){ size in
-                        guard size != .zero else { return }
-                        
-                        self.resizeWorkItem?.cancel()
-                        
-                        let workItem = DispatchWorkItem{
-                            // 防止 popover 已经关闭了
-                            guard self.popover.isShown else { return }
-                            self.popover.contentSize = size
-                        }
-                        
-                        self.resizeWorkItem = workItem
-                        // 延迟80ms执行
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
-                    }
-                )
-                
-                popover.contentViewController = hostingController
-                
-                NSApp.activate(ignoringOtherApps: true)
-                DispatchQueue.main.async {
-                    self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        guard let button = statusItem.button else { return }
+        
+        if isPopoverAnimating {
+            return
+        }
+        
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            isPopoverAnimating = true
+            
+            calendarManager.resetToToday()
+            
+            NSApp.activate(ignoringOtherApps: true)
+            
+            DispatchQueue.main.async {
+                self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self.isPopoverAnimating = false
                 }
             }
         }
