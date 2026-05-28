@@ -153,6 +153,65 @@ class CalendarIcon: ObservableObject {
         }
     }
     
+    private func processCustomFormat(format: String, date: Date) -> String {
+        let hasGanzhiYear = format.contains("gy")
+        let hasGanzhiMonth = format.contains("gm")
+        let hasLunarMonth = format.contains("lm")
+        let hasLunarDay = format.contains("ld")
+        let hasWeek = format.contains("w")
+        
+        // 使用纯符号替换农历变量
+        let placeholderGY = "[[_~_]]"
+        let placeholderGM = "[[_^_]]"
+        let placeholderLM = "[[_#_]]"
+        let placeholderLD = "[[_*_]]"
+        let placeholderWK = "[[_+_]]"
+        
+        let isDoubleW = format.contains("ww")
+        
+        var processedFormat = format
+            .replacingOccurrences(of: "gy", with: placeholderGY)
+            .replacingOccurrences(of: "gm", with: placeholderGM)
+            .replacingOccurrences(of: "lm", with: placeholderLM)
+            .replacingOccurrences(of: "ld", with: placeholderLD)
+            .replacingOccurrences(of: "ww", with: placeholderWK)
+            .replacingOccurrences(of: "w", with: placeholderWK)
+        
+        dateFormatter.dateFormat = processedFormat
+        
+        var result = dateFormatter.string(from: date)
+                
+        if hasWeek {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.firstWeekday = SettingsManager.firstDayInWeek == .monday ? 2 : 1
+            calendar.minimumDaysInFirstWeek = 1
+            
+            let weekValue = calendar.component(.weekOfYear, from: date)
+            let weekString = isDoubleW ? String(format: "%02d", weekValue) : "\(weekValue)"
+            
+            result = result.replacingOccurrences(of: placeholderWK, with: weekString)
+        }
+        
+        if hasGanzhiYear {
+            let ganzhiYear = LunarDateHelper.getGanzhiYear(for: date)
+            result = result.replacingOccurrences(of: placeholderGY, with: ganzhiYear)
+        }
+        if hasGanzhiMonth {
+            let ganzhiMonth = LunarDateHelper.getGanzhiMonth(for: date)
+            result = result.replacingOccurrences(of: placeholderGM, with: ganzhiMonth)
+        }
+        if hasLunarMonth {
+            let lunarMonth = LunarDateHelper.getLunarMonth(for: date)
+            result = result.replacingOccurrences(of: placeholderLM, with: lunarMonth)
+        }
+        if hasLunarDay {
+            let lunarDay = LunarDateHelper.getLunarDay(for: date)
+            result = result.replacingOccurrences(of: placeholderLD, with: lunarDay)
+        }
+        
+        return result
+    }
+    
     func updateDisplayOutput() {
         dateFormatter.calendar = Calendar.autoupdatingCurrent
         dateFormatter.locale = Locale.autoupdatingCurrent
@@ -171,73 +230,14 @@ class CalendarIcon: ObservableObject {
         case .custom:
             if SettingsManager.enableDoubleLine {
                 // 双行显示模式：合并上下行内容
-                dateFormatter.dateFormat = SettingsManager.doubleLineTopFormat
-                let topText = dateFormatter.string(from: currentDate)
-                
-                dateFormatter.dateFormat = SettingsManager.doubleLineBottomFormat
-                let bottomText = dateFormatter.string(from: currentDate)
+                let topText = processCustomFormat(format: SettingsManager.doubleLineTopFormat, date: currentDate)
+                let bottomText = processCustomFormat(format: SettingsManager.doubleLineBottomFormat, date: currentDate)
                 
                 // 使用换行符连接双行内容
                 displayOutput = "\(topText)\n\(bottomText)"
             } else {
                 // 单行显示模式
-                var format = SettingsManager.customFormatString
-                let hasGanzhiYear = format.contains("gy")
-                let hasGanzhiMonth = format.contains("gm")
-                let hasLunarMonth = format.contains("lm")
-                let hasLunarDay = format.contains("ld")
-                let hasWeek = format.contains("w")
-                
-                // 使用纯符号替换农历变量
-                let placeholderGY = "[[_~_]]"
-                let placeholderGM = "[[_^_]]"
-                let placeholderLM = "[[_#_]]"
-                let placeholderLD = "[[_*_]]"
-                let placeholderWK = "[[_+_]]"
-                
-                let isDoubleW = format.contains("ww")
-                
-                format = format
-                    .replacingOccurrences(of: "gy", with: placeholderGY)
-                    .replacingOccurrences(of: "gm", with: placeholderGM)
-                    .replacingOccurrences(of: "lm", with: placeholderLM)
-                    .replacingOccurrences(of: "ld", with: placeholderLD)
-                    .replacingOccurrences(of: "ww", with: placeholderWK)
-                    .replacingOccurrences(of: "w", with: placeholderWK)
-                
-                dateFormatter.dateFormat = format
-                
-                var result = dateFormatter.string(from: currentDate)
-                        
-                if hasWeek {
-                    var calendar = Calendar(identifier: .gregorian)
-                    calendar.firstWeekday = SettingsManager.firstDayInWeek == .monday ? 2 : 1
-                    calendar.minimumDaysInFirstWeek = 1
-                    
-                    let weekValue = calendar.component(.weekOfYear, from: currentDate)
-                    let weekString = isDoubleW ? String(format: "%02d", weekValue) : "\(weekValue)"
-                    
-                    result = result.replacingOccurrences(of: placeholderWK, with: weekString)
-                }
-                
-                if hasGanzhiYear {
-                    let ganzhiYear = LunarDateHelper.getGanzhiYear(for: currentDate)
-                    result = result.replacingOccurrences(of: placeholderGY, with: ganzhiYear)
-                }
-                if hasGanzhiMonth {
-                    let ganzhiMonth = LunarDateHelper.getGanzhiMonth(for: currentDate)
-                    result = result.replacingOccurrences(of: placeholderGM, with: ganzhiMonth)
-                }
-                if hasLunarMonth {
-                    let lunarMonth = LunarDateHelper.getLunarMonth(for: currentDate)
-                    result = result.replacingOccurrences(of: placeholderLM, with: lunarMonth)
-                }
-                if hasLunarDay {
-                    let lunarDay = LunarDateHelper.getLunarDay(for: currentDate)
-                    result = result.replacingOccurrences(of: placeholderLD, with: lunarDay)
-                }
-                
-                displayOutput = result
+                displayOutput = processCustomFormat(format: SettingsManager.customFormatString, date: currentDate)
             }
         }
     }
