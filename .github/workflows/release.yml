@@ -41,7 +41,7 @@ jobs:
             -project "MacCalendar.xcodeproj" \
             -scheme "MacCalendar" \
             -configuration Release \
-            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="-" \
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
 
