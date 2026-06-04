@@ -34,14 +34,20 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      # 4. 编译 SwiftUI 应用程序
+      # 4. 编译 SwiftUI 应用程序并动态注入版本号
       - name: Build SwiftUI App
         run: |
+          RAW_TAG="${{ steps.tag_version.outputs.new_tag }}"
+          APP_VERSION="${RAW_TAG#v}"
+          BUILD_NUMBER="${{ github.run_number }}"
+          
           xcodebuild clean build \
             -project "MacCalendar.xcodeproj" \
             -scheme "MacCalendar" \
             -configuration Release \
             CODE_SIGN_IDENTITY="-" \
+            MARKETING_VERSION="$APP_VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
 
