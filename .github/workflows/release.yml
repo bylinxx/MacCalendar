@@ -1,0 +1,86 @@
+name: Build and Release macOS App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    
+    # 授予 GitHub Token 创建 Tag、Release 和上传文件的权限
+    permissions:
+      contents: write
+
+    steps:
+      # 1. 拉取代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 设置为0，以获取所有历史提交和Tag
+
+      # 2. 自动生成自增 Tag
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch 
+          tag_prefix: v       
+
+      # 3. 设置 Xcode 版本
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      # 4. 编译 SwiftUI 应用程序并动态注入版本号
+      - name: Build SwiftUI App
+        run: |
+          RAW_TAG="${{ steps.tag_version.outputs.new_tag }}"
+          APP_VERSION="${RAW_TAG#v}"
+          BUILD_NUMBER="${{ github.run_number }}"
+          
+          xcodebuild clean build \
+            -project "MacCalendar.xcodeproj" \
+            -scheme "MacCalendar" \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="-" \
+            MARKETING_VERSION="$APP_VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            SYMROOT=$(pwd)/build \
+            OBJROOT=$(pwd)/build
+
+      # 5. 安装打包工具 create-dmg
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      # 6. 打包成 DMG 文件
+      - name: Create DMG package
+        run: |
+          mkdir -p dmg_source
+          cp -r build/Release/MacCalendar.app dmg_source/
+          
+          create-dmg \
+            --volname "MacCalendar Installer" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "MacCalendar.app" 150 120 \
+            --hide-extension "MacCalendar.app" \
+            --app-drop-link 450 120 \
+            "MacCalendar.dmg" \
+            "dmg_source/"
+
+      # 7. 创建 GitHub Release 并上传 DMG
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: MacCalendar.dmg
+          tag_name: ${{ steps.tag_version.outputs.new_tag }}
+          name: "Release ${{ steps.tag_version.outputs.new_tag }}"
+          body: "此版本由 GitHub Actions 自动编译和发布。\n\n包含的更新:\n${{ steps.tag_version.outputs.changelog }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
