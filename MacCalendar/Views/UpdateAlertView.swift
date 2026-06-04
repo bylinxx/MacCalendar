@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct UpdateAlertView: View {
     @ObservedObject var updateManager: UpdateManager
@@ -60,7 +61,7 @@ struct UpdateAlertView: View {
                     Button(actionTitle) {
                         if case .downloadComplete = type {
                             onDismiss()
-                            exit(0)
+                            NSApplication.shared.terminate(nil)
                         } else {
                             onAction()
                         }
