@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 enum UpdateAlertType {
     case checking
@@ -64,7 +65,10 @@ struct SettingsUpdateView: View {
         switch alertType {
         case .updateAvailable:
             downloadAndInstallUpdate()
-        case .downloadComplete, .error, .noUpdate:
+        case .downloadComplete:
+            showAlert = false
+            NSApplication.shared.terminate(nil)
+        case .error, .noUpdate:
             showAlert = false
         default:
             break
