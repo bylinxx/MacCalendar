@@ -65,10 +65,7 @@ struct SettingsUpdateView: View {
         switch alertType {
         case .updateAvailable:
             downloadAndInstallUpdate()
-        case .downloadComplete:
-            showAlert = false
-            NSApplication.shared.terminate(nil)
-        case .error, .noUpdate:
+        case .downloadComplete, .error, .noUpdate:
             showAlert = false
         default:
             break

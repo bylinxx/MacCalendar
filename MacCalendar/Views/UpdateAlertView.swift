@@ -58,7 +58,12 @@ struct UpdateAlertView: View {
                 
                 if showActionButton {
                     Button(actionTitle) {
-                        onAction()
+                        if case .downloadComplete = type {
+                            onDismiss()
+                            exit(0)
+                        } else {
+                            onAction()
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                 }
