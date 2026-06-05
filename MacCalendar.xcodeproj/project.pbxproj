@@ -6,8 +6,35 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0CE2D2102E89390000C92A10 /* 2015.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2002E89390000C92A10 /* 2015.json */; };
+		0CE2D2112E89390000C92A10 /* 2016.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2012E89390000C92A10 /* 2016.json */; };
+		0CE2D2122E89390000C92A10 /* 2017.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2022E89390000C92A10 /* 2017.json */; };
+		0CE2D2132E89390000C92A10 /* 2018.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2032E89390000C92A10 /* 2018.json */; };
+		0CE2D2142E89390000C92A10 /* 2019.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2042E89390000C92A10 /* 2019.json */; };
+		0CE2D2152E89390000C92A10 /* 2020.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2052E89390000C92A10 /* 2020.json */; };
+		0CE2D2162E89390000C92A10 /* 2021.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2062E89390000C92A10 /* 2021.json */; };
+		0CE2D2172E89390000C92A10 /* 2022.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2072E89390000C92A10 /* 2022.json */; };
+		0CE2D2182E89390000C92A10 /* 2023.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2082E89390000C92A10 /* 2023.json */; };
+		0CE2D2192E89390000C92A10 /* 2024.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2092E89390000C92A10 /* 2024.json */; };
+		0CE2D21A2E89390000C92A10 /* 2025.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D20A2E89390000C92A10 /* 2025.json */; };
+		0CE2D21B2E89390000C92A10 /* 2026.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D20B2E89390000C92A10 /* 2026.json */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		0CE2D1DE2E89321A00C92A10 /* MacCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0CE2D2002E89390000C92A10 /* 2015.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2015.json; sourceTree = "<group>"; };
+		0CE2D2012E89390000C92A10 /* 2016.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2016.json; sourceTree = "<group>"; };
+		0CE2D2022E89390000C92A10 /* 2017.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2017.json; sourceTree = "<group>"; };
+		0CE2D2032E89390000C92A10 /* 2018.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2018.json; sourceTree = "<group>"; };
+		0CE2D2042E89390000C92A10 /* 2019.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2019.json; sourceTree = "<group>"; };
+		0CE2D2052E89390000C92A10 /* 2020.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2020.json; sourceTree = "<group>"; };
+		0CE2D2062E89390000C92A10 /* 2021.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2021.json; sourceTree = "<group>"; };
+		0CE2D2072E89390000C92A10 /* 2022.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2022.json; sourceTree = "<group>"; };
+		0CE2D2082E89390000C92A10 /* 2023.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2023.json; sourceTree = "<group>"; };
+		0CE2D2092E89390000C92A10 /* 2024.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2024.json; sourceTree = "<group>"; };
+		0CE2D20A2E89390000C92A10 /* 2025.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2025.json; sourceTree = "<group>"; };
+		0CE2D20B2E89390000C92A10 /* 2026.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 2026.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -47,6 +74,7 @@
 			children = (
 				0CE2D1E02E89321A00C92A10 /* MacCalendar */,
 				0CE2D1DF2E89321A00C92A10 /* Products */,
+				0CE2D2202E89390000C92A10 /* Data */,
 			);
 			sourceTree = "<group>";
 		};
@@ -56,6 +84,25 @@
 				0CE2D1DE2E89321A00C92A10 /* MacCalendar.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		0CE2D2202E89390000C92A10 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				0CE2D2002E89390000C92A10 /* 2015.json */,
+				0CE2D2012E89390000C92A10 /* 2016.json */,
+				0CE2D2022E89390000C92A10 /* 2017.json */,
+				0CE2D2032E89390000C92A10 /* 2018.json */,
+				0CE2D2042E89390000C92A10 /* 2019.json */,
+				0CE2D2052E89390000C92A10 /* 2020.json */,
+				0CE2D2062E89390000C92A10 /* 2021.json */,
+				0CE2D2072E89390000C92A10 /* 2022.json */,
+				0CE2D2082E89390000C92A10 /* 2023.json */,
+				0CE2D2092E89390000C92A10 /* 2024.json */,
+				0CE2D20A2E89390000C92A10 /* 2025.json */,
+				0CE2D20B2E89390000C92A10 /* 2026.json */,
+			);
+			path = MacCalendar/Data;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -123,6 +170,18 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CE2D2102E89390000C92A10 /* 2015.json in Resources */,
+				0CE2D2112E89390000C92A10 /* 2016.json in Resources */,
+				0CE2D2122E89390000C92A10 /* 2017.json in Resources */,
+				0CE2D2132E89390000C92A10 /* 2018.json in Resources */,
+				0CE2D2142E89390000C92A10 /* 2019.json in Resources */,
+				0CE2D2152E89390000C92A10 /* 2020.json in Resources */,
+				0CE2D2162E89390000C92A10 /* 2021.json in Resources */,
+				0CE2D2172E89390000C92A10 /* 2022.json in Resources */,
+				0CE2D2182E89390000C92A10 /* 2023.json in Resources */,
+				0CE2D2192E89390000C92A10 /* 2024.json in Resources */,
+				0CE2D21A2E89390000C92A10 /* 2025.json in Resources */,
+				0CE2D21B2E89390000C92A10 /* 2026.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
