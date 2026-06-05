@@ -25,7 +25,16 @@ public class OffdayHelper {
             response = cached
         } else {
             let fileName = "\(year)"
-            guard let fileURL = Bundle.main.url(forResource: fileName, withExtension: "json"),
+            
+            // 优先尝试从 data 目录读取
+            var targetURL: URL? = Bundle.main.url(forResource: fileName, withExtension: "json", subdirectory: "data")
+            
+            // 尝试从资源根目录读取
+            if targetURL == nil {
+                targetURL = Bundle.main.url(forResource: fileName, withExtension: "json")
+            }
+            
+            guard let fileURL = targetURL,
                   let data = try? Data(contentsOf: fileURL),
                   let decoded = try? JSONDecoder().decode(OffdayDataResponse.self, from: data) else {
                 return nil
