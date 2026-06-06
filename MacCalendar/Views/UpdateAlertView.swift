@@ -61,7 +61,10 @@ struct UpdateAlertView: View {
                     Button(actionTitle) {
                         if case .downloadComplete = type {
                             onDismiss()
-                            NSApplication.shared.terminate(nil)
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                NSApplication.shared.terminate(nil)
+                            }
                         } else {
                             onAction()
                         }
