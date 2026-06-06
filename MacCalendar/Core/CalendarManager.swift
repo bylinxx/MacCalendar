@@ -209,7 +209,17 @@ class CalendarManager: ObservableObject {
         
         let allEKCalendars = eventStore.calendars(for: .event)
         
-        let effectiveIDs = getFilterCalendarIds() ?? Set(allEKCalendars.map { $0.calendarIdentifier })
+        let savedIDs = getFilterCalendarIds()
+        
+        var effectiveIDs = Set<String>()
+        if let savedIDs = savedIDs {
+            effectiveIDs = savedIDs
+            for calendar in allEKCalendars {
+                effectiveIDs.insert(calendar.calendarIdentifier)
+            }
+        } else {
+            effectiveIDs = Set(allEKCalendars.map { $0.calendarIdentifier })
+        }
         
         let calendarInfos = allEKCalendars.map { calendar in
             CalendarInfo(
@@ -280,7 +290,10 @@ class CalendarManager: ObservableObject {
             .publisher(for: .EKEventStoreChanged, object: eventStore)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                self?.refreshEvents()
+                Task {
+                    await self?.loadCalendarInfo()
+                    self?.refreshEvents()
+                }
             }
             .store(in: &cancellables)
     }
