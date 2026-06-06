@@ -74,7 +74,7 @@
 			children = (
 				0CE2D1E02E89321A00C92A10 /* MacCalendar */,
 				0CE2D1DF2E89321A00C92A10 /* Products */,
-				0CE2D2202E89390000C92A10 /* Data */,
+				0CE2D2202E89390000C92A10 /* MacCalendar/Data */,
 			);
 			sourceTree = "<group>";
 		};
@@ -86,7 +86,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		0CE2D2202E89390000C92A10 /* Data */ = {
+		0CE2D2202E89390000C92A10 /* MacCalendar/Data */ = {
 			isa = PBXGroup;
 			children = (
 				0CE2D2002E89390000C92A10 /* 2015.json */,
@@ -358,6 +358,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
+				VERSIONING_SYSTEM = "apple-generic";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -406,6 +407,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
+				VERSIONING_SYSTEM = "apple-generic";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
