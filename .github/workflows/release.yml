@@ -8,7 +8,7 @@ jobs:
   build-and-release:
     runs-on: macos-latest
     
-    # 授予 GitHub Token 创建 Tag、Release 和上传文件的权限
+    # 授予 GitHub Token 读写代码库的权限，以支持自动提交和 Release
     permissions:
       contents: write
 
@@ -28,34 +28,58 @@ jobs:
           default_bump: patch 
           tag_prefix: v       
 
-      # 3. 设置 Xcode 版本
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      # 4. 编译 SwiftUI 应用程序并动态注入版本号
-      - name: Build SwiftUI App
+      # 3. 修改 Xcode 项目文件中的版本号 (使用 agvtool)
+      - name: Update Xcode Project Version
         run: |
           RAW_TAG="${{ steps.tag_version.outputs.new_tag }}"
           APP_VERSION="${RAW_TAG#v}"
           BUILD_NUMBER="${{ github.run_number }}"
           
+          # 使用苹果官方工具 agvtool 修改 pbxproj 文件中的版本号
+          xcrun agvtool new-marketing-version "$APP_VERSION"
+          xcrun agvtool new-version -all "$BUILD_NUMBER"
+
+      # 4. 修改后的版本号自动提交回 GitHub 仓库
+      - name: Commit and Push changes
+        run: |
+          # 配置机器人的 Git 身份
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 暂存被 agvtool 修改的项目文件
+          git add .
+          
+          # 检查是否有文件变动，如果有则提交
+          if ! git diff-index --quiet HEAD; then
+            # 必须包含 [skip ci]，否则会导致无限循环触发 Actions！
+            git commit -m "chore: bump version to ${{ steps.tag_version.outputs.new_tag }} [skip ci]"
+            git push origin main
+          else
+            echo "No changes to commit."
+          fi
+
+      # 5. 设置 Xcode 版本
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      # 6. 编译 SwiftUI 应用程序
+      - name: Build SwiftUI App
+        run: |
           xcodebuild clean build \
             -project "MacCalendar.xcodeproj" \
             -scheme "MacCalendar" \
             -configuration Release \
             CODE_SIGN_IDENTITY="-" \
-            MARKETING_VERSION="$APP_VERSION" \
-            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
 
-      # 5. 安装打包工具 create-dmg
+      # 7. 安装打包工具 create-dmg
       - name: Install create-dmg
         run: brew install create-dmg
 
-      # 6. 打包成 DMG 文件
+      # 8. 打包成 DMG 文件
       - name: Create DMG package
         run: |
           mkdir -p dmg_source
@@ -72,7 +96,7 @@ jobs:
             "MacCalendar.dmg" \
             "dmg_source/"
 
-      # 7. 创建 GitHub Release 并上传 DMG
+      # 9. 创建 GitHub Release 并上传 DMG
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
