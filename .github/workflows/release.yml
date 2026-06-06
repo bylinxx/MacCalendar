@@ -28,15 +28,17 @@ jobs:
           default_bump: patch 
           tag_prefix: v       
 
-      # 3. 修改 Xcode 项目文件中的版本号 (使用 agvtool)
+      # 3. 修改 Xcode 项目文件中的版本号 (混合使用 sed 和 agvtool)
       - name: Update Xcode Project Version
         run: |
           RAW_TAG="${{ steps.tag_version.outputs.new_tag }}"
           APP_VERSION="${RAW_TAG#v}"
           BUILD_NUMBER="${{ github.run_number }}"
           
-          # 使用苹果官方工具 agvtool 修改 pbxproj 文件中的版本号
-          xcrun agvtool new-marketing-version "$APP_VERSION"
+          # 1. 使用 sed 替换 pbxproj 中的 MARKETING_VERSION (对外版本号)
+          sed -i '' -e 's/MARKETING_VERSION = .*/MARKETING_VERSION = '"$APP_VERSION"';/' "MacCalendar.xcodeproj/project.pbxproj"
+          
+          # 2. 内部 Build 号依然可以使用 agvtool 更新
           xcrun agvtool new-version -all "$BUILD_NUMBER"
 
       # 4. 修改后的版本号自动提交回 GitHub 仓库
@@ -46,7 +48,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 暂存被 agvtool 修改的项目文件
+          # 暂存被修改的项目文件
           git add .
           
           # 检查是否有文件变动，如果有则提交
