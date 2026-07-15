@@ -66,46 +66,73 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      # 6. 编译 SwiftUI 应用程序
-      - name: Build SwiftUI App
+      # 6. 分别编译 Apple Silicon 和 Intel 版本，避免 runner 默认架构影响发布产物
+      - name: Build architecture-specific SwiftUI apps
         run: |
-          xcodebuild clean build \
-            -project "MacCalendar.xcodeproj" \
-            -scheme "MacCalendar" \
-            -configuration Release \
-            CODE_SIGN_IDENTITY="-" \
-            SYMROOT=$(pwd)/build \
-            OBJROOT=$(pwd)/build
+          build_app() {
+            local arch="$1"
+            local derived_data_path="$(pwd)/build/DerivedData-$arch"
+            local app_path="$derived_data_path/Build/Products/Release/MacCalendar.app"
+
+            xcodebuild clean build \
+              -project "MacCalendar.xcodeproj" \
+              -scheme "MacCalendar" \
+              -configuration Release \
+              -destination "platform=macOS" \
+              -derivedDataPath "$derived_data_path" \
+              CODE_SIGN_IDENTITY="-" \
+              ARCHS="$arch" \
+              ONLY_ACTIVE_ARCH=NO
+
+            lipo -archs "$app_path/Contents/MacOS/MacCalendar"
+            [[ "$(lipo -archs "$app_path/Contents/MacOS/MacCalendar")" == "$arch" ]]
+            codesign --verify --deep --strict --verbose=2 "$app_path"
+          }
+
+          build_app arm64
+          build_app x86_64
 
       # 7. 安装打包工具 create-dmg
       - name: Install create-dmg
         run: brew install create-dmg
 
-      # 8. 打包成 DMG 文件
-      - name: Create DMG package
+      # 8. 分别打包为 Apple Silicon 和 Intel DMG
+      - name: Create DMG packages
         run: |
-          mkdir -p dmg_source
-          cp -r build/Release/MacCalendar.app dmg_source/
-          
-          create-dmg \
-            --volname "MacCalendar Installer" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "MacCalendar.app" 150 120 \
-            --hide-extension "MacCalendar.app" \
-            --app-drop-link 450 120 \
-            "MacCalendar.dmg" \
-            "dmg_source/"
+          create_dmg() {
+            local arch="$1"
+            local dmg_name="$2"
+            local volume_name="$3"
+            local source_dir="dmg_source-$arch"
 
-      # 9. 创建 GitHub Release 并上传 DMG
+            mkdir -p "$source_dir"
+            cp -r "build/DerivedData-$arch/Build/Products/Release/MacCalendar.app" "$source_dir/"
+
+            create-dmg \
+              --volname "$volume_name" \
+              --window-pos 200 120 \
+              --window-size 600 400 \
+              --icon-size 100 \
+              --icon "MacCalendar.app" 150 120 \
+              --hide-extension "MacCalendar.app" \
+              --app-drop-link 450 120 \
+              "$dmg_name" \
+              "$source_dir/"
+          }
+
+          create_dmg arm64 "MacCalendar-arm64.dmg" "MacCalendar Installer (Apple Silicon)"
+          create_dmg x86_64 "MacCalendar-x86_64.dmg" "MacCalendar Installer (Intel)"
+
+      # 9. 创建 GitHub Release 并上传两个架构的 DMG
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: MacCalendar.dmg
+          files: |
+            MacCalendar-arm64.dmg
+            MacCalendar-x86_64.dmg
           tag_name: ${{ steps.tag_version.outputs.new_tag }}
           name: "Release ${{ steps.tag_version.outputs.new_tag }}"
-          body: "此版本由 GitHub Actions 自动编译和发布。\n\n包含的更新:\n${{ steps.tag_version.outputs.changelog }}"
+          body: "此版本由 GitHub Actions 自动编译和发布。\n\n安装包：\n- Apple 芯片 Mac：MacCalendar-arm64.dmg\n- Intel 芯片 Mac：MacCalendar-x86_64.dmg\n\n包含的更新:\n${{ steps.tag_version.outputs.changelog }}"
           draft: false
           prerelease: false
         env:
