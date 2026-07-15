@@ -21,7 +21,7 @@
 
 > [!NOTE]
 > - **手动安装**
->   1. 从 [GitHub Releases](https://github.com/bylinxx/MacCalendar/releases/latest) 下载最新版本 dmg 格式的镜像
+>   1. 从 [GitHub Releases](https://github.com/bylinxx/MacCalendar/releases/latest) 下载最新版本 dmg 格式的镜像：Apple 芯片 Mac 下载 `MacCalendar-arm64.dmg`，Intel 芯片 Mac 下载 `MacCalendar-x86_64.dmg`
 >   2. 双击打开下载的 dmg 镜像
 >   3. 拖动MacCalendar图标到Applications图标完成安装
 >   4. 如何更新？偏好设置->检查更新

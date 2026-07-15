@@ -12,6 +12,16 @@ class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
     static let shared = UpdateManager()
 
     private let githubRepoURL = "https://api.github.com/repos/bylinxx/MacCalendar/releases/latest"
+
+    private var releaseAssetName: String {
+#if arch(x86_64)
+        return "MacCalendar-x86_64.dmg"
+#elseif arch(arm64)
+        return "MacCalendar-arm64.dmg"
+#else
+        return "MacCalendar-arm64.dmg"
+#endif
+    }
     
     private var currentVersion: String {
         Bundle.main.appVersion ?? "1.0.0"
@@ -86,15 +96,15 @@ class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
                         await MainActor.run {
                             updateAvailable = true
                         }
-                        if let assets = release["assets"] as? [[String: Any]] {
-                            for asset in assets {
-                                if let downloadUrl = asset["browser_download_url"] as? String,
-                                   downloadUrl.hasSuffix(".dmg") {
-                                    await MainActor.run {
-                                        self.downloadURL = URL(string: downloadUrl)
-                                    }
-                                    break
-                                }
+                        if let assets = release["assets"] as? [[String: Any]],
+                           let asset = assets.first(where: { ($0["name"] as? String) == releaseAssetName }),
+                           let downloadUrl = asset["browser_download_url"] as? String {
+                            await MainActor.run {
+                                self.downloadURL = URL(string: downloadUrl)
+                            }
+                        } else {
+                            await MainActor.run {
+                                self.downloadError = "未找到适用于当前 Mac 架构的安装包"
                             }
                         }
                     }
