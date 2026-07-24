@@ -74,6 +74,8 @@ struct SettingsManager {
     @AppStorage("filterCalendar") static var filterCalendar: Data = Data()
     @AppStorage("firstDayInWeek") static var firstDayInWeek:FirstDayInWeek = .monday
     @AppStorage("showWeekNumber") static var showWeekNumber = false
+    @AppStorage("widgetMonthOffset") static var widgetMonthOffset = 0
+    @AppStorage("widgetLastUserActionTime") static var widgetLastUserActionTime = 0.0
     @AppStorage("updateCheckFrequency") static var updateCheckFrequency: UpdateCheckFrequency = .weekly
     @AppStorage("showDaysIndicator") static var showDaysIndicator = true
     @AppStorage("appearanceMode") static var appearanceMode: AppearanceMode = .system

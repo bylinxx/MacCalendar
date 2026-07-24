@@ -187,7 +187,8 @@ class CalendarManager: ObservableObject {
             return
         }
         
-        guard let gridDates = generateDateGrid(for: date),
+        let firstDayInWeek = SettingsManager.firstDayInWeek == .monday ? 2 : 1
+        guard let gridDates = CalendarGridHelper.generateDateGrid(for: date, firstDayInWeek: firstDayInWeek),
               let firstDate = gridDates.first,
               let lastDate = gridDates.last else {
             return
@@ -409,99 +410,29 @@ class CalendarManager: ObservableObject {
         return groupedEvents
     }
     
-    private func generateDateGrid(for date: Date) -> [Date]? {
-        guard let monthInterval = calendar.dateInterval(of: .month, for: date) else { return nil }
-        
-        var gridDates: [Date] = []
-        let firstDayOfMonth = monthInterval.start
-        let range = calendar.range(of: .day, in: .month, for: date)!
-        
-        // 上个月补齐
-        let firstWeekday = SettingsManager.firstDayInWeek == FirstDayInWeek.monday ? 2 : 1
-        let weekdayOfFirst = calendar.component(.weekday, from: firstDayOfMonth)
-        let offsetToMonday = (weekdayOfFirst - firstWeekday + 7) % 7
-        if offsetToMonday > 0 {
-            for i in stride(from: offsetToMonday, to: 0, by: -1) {
-                if let prevDay = calendar.date(byAdding: .day, value: -i, to: firstDayOfMonth) {
-                    gridDates.append(prevDay)
-                }
-            }
-        }
-        
-        for i in 0..<range.count {
-            if let day = calendar.date(byAdding: .day, value: i, to: firstDayOfMonth) {
-                gridDates.append(day)
-            }
-        }
-        
-        // 下个月补齐
-        let totalDays = gridDates.count
-        let remaining = totalDays % 7
-        if remaining > 0 {
-            let lastDay = gridDates.last!
-            for i in 1...(7 - remaining) {
-                if let nextDay = calendar.date(byAdding: .day, value: i, to: lastDay) {
-                    gridDates.append(nextDay)
-                }
-            }
-        }
-        
-        return gridDates
-    }
-    private func calculateWeekOfYear(for date: Date?) -> Int {
-        guard let date = date else { return 0 }
-        
-        var calendar = Calendar(identifier: .gregorian)
-        
-        calendar.locale = Locale.current
-        
-        calendar.firstWeekday = SettingsManager.firstDayInWeek == .monday ? 2 : 1
-        
-        calendar.minimumDaysInFirstWeek = 1
-        
-        let week = calendar.component(.weekOfYear, from: date)
-        
-        return week
-    }
+
     private func generateCalendarGrid(for date: Date, events: [Date: [CalendarEvent]]) async -> [CalendarDay] {
-        let lunarCalendar = Calendar(identifier: .chinese)
-        let lunarMonthSymbols = ["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"]
-        let lunarDaySymbols = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十", "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十", "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"]
+        let firstDayInWeek = SettingsManager.firstDayInWeek == .monday ? 2 : 1
         
-        guard let gridDates = generateDateGrid(for: date) else { return [] }
+        let basicDays = CalendarGridHelper.generateBasicCalendarData(for: date, firstDayInWeek: firstDayInWeek, today: Date())
         
         var newDays: [CalendarDay] = []
         
-        for day in gridDates {
-            let lunarDateComponents = lunarCalendar.dateComponents([.month,.day,.isLeapMonth], from: day)
-            let lunarMonth = lunarDateComponents.month ?? 1
-            let lunarDay = lunarDateComponents.day ?? 1
-            let lunarLeapMonth = lunarDateComponents.isLeapMonth
-            
-            var daysInLunarMonth = 0
-            if let range = lunarCalendar.range(of: .day, in: .month, for: day) {
-                daysInLunarMonth = range.count
-            }
-            
-            let ganzhiYear = LunarDateHelper.getGanzhiYear(for: day)
-            let zodiac = LunarDateHelper.getZodiac(for: day)
-            let short_lunar = (lunarDay == 1) ? (lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1] : lunarDaySymbols[lunarDay - 1]
-            let full_lunar = "\(ganzhiYear) (\(zodiac)) \((lunarLeapMonth == true ? "闰" : "") + lunarMonthSymbols[lunarMonth - 1])\(lunarDaySymbols[lunarDay - 1])"
-            
-            let dayStart = Calendar.Based.startOfDay(for: day)
+        for day in basicDays {
+            let dayStart = Calendar.Based.startOfDay(for: day.date)
             let dayEvents = events[dayStart] ?? []
             
-            let solar_term = SolarTermHelper.getSolarTerm(for: day)
-            
-            let holidays = HolidayHelper.getHolidays(date: day, lunarMonth: lunarMonth, lunarDay: lunarDay, daysInLunarMonth: daysInLunarMonth)
-            
-            let offday = OffdayHelper.checkOffdayStatus(for: day)
-            
-            let is_today = Calendar.Based.isDateInToday(day)
-            
-            let is_currentMonth = Calendar.Based.isDate(day, equalTo: date, toGranularity: .month)
-            
-            newDays.append(CalendarDay(is_today: is_today, is_currentMonth: is_currentMonth, date: day, short_lunar: short_lunar, full_lunar: full_lunar, holidays: holidays, solar_term: solar_term, offday: offday, events: dayEvents))
+            newDays.append(CalendarDay(
+                is_today: day.isToday,
+                is_currentMonth: day.isCurrentMonth,
+                date: day.date,
+                short_lunar: day.shortLunar,
+                full_lunar: day.fullLunar,
+                holidays: day.holidays,
+                solar_term: day.solarTerm,
+                offday: day.offday,
+                events: dayEvents
+            ))
         }
         
         var _newDays: [CalendarDay] = []
@@ -511,7 +442,8 @@ class CalendarManager: ObservableObject {
             }
             
             for group in day_groups {
-                let weekNum = calculateWeekOfYear(for: group.first?.date)
+                let firstDayInWeek = SettingsManager.firstDayInWeek == .monday ? 2 : 1
+                let weekNum = CalendarGridHelper.calculateWeekOfYear(for: group.first?.date, firstDayInWeek: firstDayInWeek)
                 
                 let weekItem = CalendarDay(is_weekNumber: true, weekNumber: weekNum)
                 
