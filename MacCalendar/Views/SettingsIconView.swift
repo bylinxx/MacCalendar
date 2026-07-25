@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct SettingsIconView: View {
-    @AppStorage("displayMode") private var displayMode: DisplayMode = SettingsManager.displayMode
-    @AppStorage("customFormatString") private var customFormatString: String = SettingsManager.customFormatString
-    @AppStorage("enableDoubleLine") private var enableDoubleLine: Bool = SettingsManager.enableDoubleLine
-    @AppStorage("doubleLineTopFormat") private var doubleLineTopFormat: String = SettingsManager.doubleLineTopFormat
-    @AppStorage("doubleLineBottomFormat") private var doubleLineBottomFormat: String = SettingsManager.doubleLineBottomFormat
-    @AppStorage("firstDayInWeek") private var firstDayInWeek: FirstDayInWeek = SettingsManager.firstDayInWeek
-    @AppStorage("showWeekNumber") private var showWeekNumber: Bool = SettingsManager.showWeekNumber
-    @AppStorage("showDaysIndicator") private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
-    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
+    @AppStorage("displayMode", store: SettingsManager.sharedDefaults) private var displayMode: DisplayMode = SettingsManager.displayMode
+    @AppStorage("customFormatString", store: SettingsManager.sharedDefaults) private var customFormatString: String = SettingsManager.customFormatString
+    @AppStorage("enableDoubleLine", store: SettingsManager.sharedDefaults) private var enableDoubleLine: Bool = SettingsManager.enableDoubleLine
+    @AppStorage("doubleLineTopFormat", store: SettingsManager.sharedDefaults) private var doubleLineTopFormat: String = SettingsManager.doubleLineTopFormat
+    @AppStorage("doubleLineBottomFormat", store: SettingsManager.sharedDefaults) private var doubleLineBottomFormat: String = SettingsManager.doubleLineBottomFormat
+    @AppStorage("firstDayInWeek", store: SettingsManager.sharedDefaults) private var firstDayInWeek: FirstDayInWeek = SettingsManager.firstDayInWeek
+    @AppStorage("showWeekNumber", store: SettingsManager.sharedDefaults) private var showWeekNumber: Bool = SettingsManager.showWeekNumber
+    @AppStorage("showDaysIndicator", store: SettingsManager.sharedDefaults) private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
+    @AppStorage("appearanceMode", store: SettingsManager.sharedDefaults) private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
     
     var body: some View {
         Form {

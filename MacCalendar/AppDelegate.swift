@@ -8,6 +8,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import WidgetKit
 
 class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     static var shared:AppDelegate?
@@ -28,6 +29,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
+        
+        SettingsManager.migrateSettingsIfNeeded()
         
         _ = calendarManager
         
@@ -157,13 +160,14 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         
         updateAppearance()
         
-        // 监听外观设置变化
+        // 监听设置变化，更新外观并刷新小组件
         appearanceObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             self?.updateAppearance()
+            WidgetCenter.shared.reloadAllTimelines()
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: NSApplication.didResignActiveNotification, object: nil)

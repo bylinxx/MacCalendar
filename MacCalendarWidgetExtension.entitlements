@@ -6,7 +6,5 @@
 	<array>
 		<string>group.Lin.MacCalendar</string>
 	</array>
-	<key>com.apple.security.personal-information.calendars</key>
-	<true/>
 </dict>
 </plist>

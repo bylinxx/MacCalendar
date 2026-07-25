@@ -37,7 +37,8 @@ struct WidgetDataHelper {
         let year = calendar.component(.year, from: date)
         let month = calendar.component(.month, from: date)
         
-        let basicDays = CalendarGridHelper.generateBasicCalendarData(for: date, firstDayInWeek: 2, today: today)
+        let firstDayInWeek = SettingsManager.firstDayInWeek == .monday ? 2 : 1
+        let basicDays = CalendarGridHelper.generateBasicCalendarData(for: date, firstDayInWeek: firstDayInWeek, today: today)
         
         let widgetDays = basicDays.map { day in
             WidgetCalendarDay(

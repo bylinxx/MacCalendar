@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SettingsLaunchAtLoginView: View {
-    @AppStorage("launchAtLogin") private var launchAtLogin: Bool = SettingsManager.launchAtLogin
+    @AppStorage("launchAtLogin", store: SettingsManager.sharedDefaults) private var launchAtLogin: Bool = SettingsManager.launchAtLogin
     
     var body: some View {
         Form {

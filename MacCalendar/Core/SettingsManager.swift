@@ -64,19 +64,54 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 }
 
 struct SettingsManager {
-    @AppStorage("launchAtLogin") static var launchAtLogin = false
-    @AppStorage("startMinimized") static var startMinimized = false
-    @AppStorage("displayMode") static var displayMode: DisplayMode = .icon
-    @AppStorage("customFormatString") static var customFormatString: String = "yyyy-MM-dd"
-    @AppStorage("enableDoubleLine") static var enableDoubleLine = false
-    @AppStorage("doubleLineTopFormat") static var doubleLineTopFormat: String = "HH:mm"
-    @AppStorage("doubleLineBottomFormat") static var doubleLineBottomFormat: String = "MM-dd"
-    @AppStorage("filterCalendar") static var filterCalendar: Data = Data()
-    @AppStorage("firstDayInWeek") static var firstDayInWeek:FirstDayInWeek = .monday
-    @AppStorage("showWeekNumber") static var showWeekNumber = false
-    @AppStorage("widgetMonthOffset") static var widgetMonthOffset = 0
-    @AppStorage("widgetLastUserActionTime") static var widgetLastUserActionTime = 0.0
-    @AppStorage("updateCheckFrequency") static var updateCheckFrequency: UpdateCheckFrequency = .weekly
-    @AppStorage("showDaysIndicator") static var showDaysIndicator = true
-    @AppStorage("appearanceMode") static var appearanceMode: AppearanceMode = .system
+    static let sharedDefaults = UserDefaults(suiteName: "group.Lin.MacCalendar")!
+    
+    @AppStorage("launchAtLogin", store: sharedDefaults) static var launchAtLogin = false
+    @AppStorage("startMinimized", store: sharedDefaults) static var startMinimized = false
+    @AppStorage("displayMode", store: sharedDefaults) static var displayMode: DisplayMode = .icon
+    @AppStorage("customFormatString", store: sharedDefaults) static var customFormatString: String = "yyyy-MM-dd"
+    @AppStorage("enableDoubleLine", store: sharedDefaults) static var enableDoubleLine = false
+    @AppStorage("doubleLineTopFormat", store: sharedDefaults) static var doubleLineTopFormat: String = "HH:mm"
+    @AppStorage("doubleLineBottomFormat", store: sharedDefaults) static var doubleLineBottomFormat: String = "MM-dd"
+    @AppStorage("filterCalendar", store: sharedDefaults) static var filterCalendar: Data = Data()
+    @AppStorage("firstDayInWeek", store: sharedDefaults) static var firstDayInWeek:FirstDayInWeek = .monday
+    @AppStorage("showWeekNumber", store: sharedDefaults) static var showWeekNumber = false
+    @AppStorage("widgetMonthOffset", store: sharedDefaults) static var widgetMonthOffset = 0
+    @AppStorage("widgetLastUserActionTime", store: sharedDefaults) static var widgetLastUserActionTime = 0.0
+    @AppStorage("updateCheckFrequency", store: sharedDefaults) static var updateCheckFrequency: UpdateCheckFrequency = .weekly
+    @AppStorage("showDaysIndicator", store: sharedDefaults) static var showDaysIndicator = true
+    @AppStorage("appearanceMode", store: sharedDefaults) static var appearanceMode: AppearanceMode = .system
+    
+    static func migrateSettingsIfNeeded() {
+        let hasMigratedKey = "__hasMigratedToAppGroup"
+        
+        guard !sharedDefaults.bool(forKey: hasMigratedKey) else { return }
+        
+        let keysToMigrate = [
+            "launchAtLogin",
+            "startMinimized",
+            "displayMode",
+            "customFormatString",
+            "enableDoubleLine",
+            "doubleLineTopFormat",
+            "doubleLineBottomFormat",
+            "filterCalendar",
+            "firstDayInWeek",
+            "showWeekNumber",
+            "widgetMonthOffset",
+            "widgetLastUserActionTime",
+            "updateCheckFrequency",
+            "showDaysIndicator",
+            "appearanceMode"
+        ]
+        
+        for key in keysToMigrate {
+            if let value = UserDefaults.standard.object(forKey: key),
+               sharedDefaults.object(forKey: key) == nil {
+                sharedDefaults.set(value, forKey: key)
+            }
+        }
+        
+        sharedDefaults.set(true, forKey: hasMigratedKey)
+    }
 }
