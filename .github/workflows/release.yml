@@ -105,12 +105,31 @@ jobs:
             -project "MacCalendar.xcodeproj" \
             -scheme "MacCalendar" \
             -configuration Release \
-            CODE_SIGN_IDENTITY="MacCalendar Developer" \
-            DEVELOPMENT_TEAM=B7NL26JPVD \
-            CODE_SIGN_STYLE=Manual \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
+            ENTITLEMENTS_REQUIRED=YES \
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
+
+      - name: Manually sign App and Extension with Entitlements
+        run: |
+          WIDGET_ENTITLEMENTS="MacCalendarWidget/MacCalendarWidgetExtension.entitlements"
+          APP_ENTITLEMENTS="MacCalendar/MacCalendar.entitlements"
+          
+          WIDGET_PATH="build/Release/MacCalendar.app/Contents/PlugIns/MacCalendarWidgetExtension.appex"
+          APP_PATH="build/Release/MacCalendar.app"
+          
+          codesign --force --deep --sign "MacCalendar Developer" \
+            --entitlements "$WIDGET_ENTITLEMENTS" \
+            --options runtime \
+            "$WIDGET_PATH"
+          
+          codesign --force --deep --sign "MacCalendar Developer" \
+            --entitlements "$APP_ENTITLEMENTS" \
+            --options runtime \
+            "$APP_PATH"
 
       # 8. 验证签名和 App Group 权限
       - name: Verify code signing and entitlements
