@@ -107,7 +107,8 @@ jobs:
             -configuration Release \
             CODE_SIGN_IDENTITY="MacCalendar Developer" \
             DEVELOPMENT_TEAM=B7NL26JPVD \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="" \
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
 
