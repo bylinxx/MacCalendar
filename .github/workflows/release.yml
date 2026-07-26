@@ -73,48 +73,15 @@ jobs:
             -project "MacCalendar.xcodeproj" \
             -scheme "MacCalendar" \
             -configuration Release \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            ENTITLEMENTS_REQUIRED=YES \
+            CODE_SIGN_IDENTITY="-" \
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
 
-      # 7. 手动注入 App Groups 权限并进行 Ad-Hoc 签名 (-)
-      - name: Manually sign App and Extension with Ad-Hoc Identity
-        run: |
-          WIDGET_ENTITLEMENTS="MacCalendarWidget/MacCalendarWidgetExtension.entitlements"
-          APP_ENTITLEMENTS="MacCalendar/MacCalendar.entitlements"
-          
-          WIDGET_PATH="build/Release/MacCalendar.app/Contents/PlugIns/MacCalendarWidgetExtension.appex"
-          APP_PATH="build/Release/MacCalendar.app"
-          
-          codesign --force --deep --sign "-" \
-            --entitlements "$WIDGET_ENTITLEMENTS" \
-            --options runtime \
-            "$WIDGET_PATH"
-          
-          codesign --force --deep --sign "-" \
-            --entitlements "$APP_ENTITLEMENTS" \
-            --options runtime \
-            "$APP_PATH"
-
-      # 8. 验证签名和 App Group 权限
-      - name: Verify code signing and entitlements
-        run: |
-          echo "=== Main App Signing Info ==="
-          codesign -d --entitlements - build/Release/MacCalendar.app
-          
-          echo ""
-          echo "=== Widget Extension Signing Info ==="
-          codesign -d --entitlements - build/Release/MacCalendar.app/Contents/PlugIns/MacCalendarWidgetExtension.appex
-
-      # 9. 安装打包工具 create-dmg
+      # 7. 安装打包工具 create-dmg
       - name: Install create-dmg
         run: brew install create-dmg
 
-      # 10. 打包成 DMG 文件
+      # 8. 打包成 DMG 文件
       - name: Create DMG package
         run: |
           mkdir -p dmg_source
@@ -131,7 +98,7 @@ jobs:
             "MacCalendar.dmg" \
             "dmg_source/"
 
-      # 11. 创建 GitHub Release 并上传 DMG
+      # 9. 创建 GitHub Release 并上传 DMG
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
