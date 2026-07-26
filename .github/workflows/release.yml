@@ -66,22 +66,73 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      # 6. 编译 SwiftUI 应用程序
+      # 6. 创建自签名证书并导入临时 Keychain
+      - name: Create self-signed certificate and import to keychain
+        run: |
+          KEYCHAIN_PATH=$(pwd)/build.keychain-db
+          KEYCHAIN_PASSWORD="buildpassword"
+          P12_PASSWORD="p12password"
+          
+          # 创建临时 keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          
+          # 设置 keychain 为默认 keychain
+          security default-keychain -s "$KEYCHAIN_PATH"
+          
+          # 解锁 keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          
+          # 设置 keychain 锁定超时为 3600 秒
+          security set-keychain-settings -t 3600 -u "$KEYCHAIN_PATH"
+          
+          # 使用 openssl 生成自签名证书
+          openssl req -newkey rsa:2048 -nodes -keyout /tmp/build_key.pem -x509 -days 365 -out /tmp/build_cert.pem \
+            -subj "/CN=MacCalendar Developer/O=MacCalendar/OU=B7NL26JPVD"
+          
+          # 转换为 p12 格式
+          openssl pkcs12 -export -inkey /tmp/build_key.pem -in /tmp/build_cert.pem -out /tmp/build_certificate.p12 -passout pass:"$P12_PASSWORD"
+          
+          # 导入证书到 keychain
+          security import /tmp/build_certificate.p12 -k "$KEYCHAIN_PATH" -P "$P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/xcodebuild
+          
+          # 设置 ACL
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+      # 7. 编译 SwiftUI 应用程序
       - name: Build SwiftUI App
         run: |
           xcodebuild clean build \
             -project "MacCalendar.xcodeproj" \
             -scheme "MacCalendar" \
             -configuration Release \
-            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_IDENTITY="MacCalendar Developer" \
+            DEVELOPMENT_TEAM=B7NL26JPVD \
+            CODE_SIGN_STYLE=Automatic \
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
 
-      # 7. 安装打包工具 create-dmg
+      # 8. 验证签名和 App Group 权限
+      - name: Verify code signing and entitlements
+        run: |
+          echo "=== Main App Signing Info ==="
+          codesign -d --entitlements - build/Release/MacCalendar.app
+          
+          echo ""
+          echo "=== Widget Extension Signing Info ==="
+          codesign -d --entitlements - build/Release/MacCalendar.app/Contents/PlugIns/MacCalendarWidgetExtension.appex
+
+      # 9. 清理临时 Keychain
+      - name: Cleanup temporary keychain
+        if: always()
+        run: |
+          KEYCHAIN_PATH=$(pwd)/build.keychain-db
+          security delete-keychain "$KEYCHAIN_PATH" 2>&1 || true
+
+      # 10. 安装打包工具 create-dmg
       - name: Install create-dmg
         run: brew install create-dmg
 
-      # 8. 打包成 DMG 文件
+      # 11. 打包成 DMG 文件
       - name: Create DMG package
         run: |
           mkdir -p dmg_source
@@ -98,7 +149,7 @@ jobs:
             "MacCalendar.dmg" \
             "dmg_source/"
 
-      # 9. 创建 GitHub Release 并上传 DMG
+      # 12. 创建 GitHub Release 并上传 DMG
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
