@@ -90,7 +90,7 @@ jobs:
             -subj "/CN=MacCalendar Developer/O=MacCalendar/OU=B7NL26JPVD"
           
           # 转换为 p12 格式
-          openssl pkcs12 -export -inkey /tmp/build_key.pem -in /tmp/build_cert.pem -out /tmp/build_certificate.p12 -passout pass:"$P12_PASSWORD"
+          openssl pkcs12 -export -legacy -inkey /tmp/build_key.pem -in /tmp/build_cert.pem -out /tmp/build_certificate.p12 -passout pass:"$P12_PASSWORD"
           
           # 导入证书到 keychain
           security import /tmp/build_certificate.p12 -k "$KEYCHAIN_PATH" -P "$P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/xcodebuild
