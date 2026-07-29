@@ -33,12 +33,12 @@ struct WidgetDataHelper {
     
     static let calendar = Calendar.Based
     
-    static func getCalendarData(for date: Date = Date(), today: Date = Date()) -> WidgetCalendarData {
+    static func getCalendarData(for date: Date = Date(), today: Date = Date(), firstDayInWeek: FirstDayInWeek = .sunday) -> WidgetCalendarData {
         let year = calendar.component(.year, from: date)
         let month = calendar.component(.month, from: date)
         
-        let firstDayInWeek = SettingsManager.firstDayInWeek == .monday ? 2 : 1
-        let basicDays = CalendarGridHelper.generateBasicCalendarData(for: date, firstDayInWeek: firstDayInWeek, today: today)
+        let firstDayInt: Int = firstDayInWeek == .monday ? 2 : 1
+        let basicDays = CalendarGridHelper.generateBasicCalendarData(for: date, firstDayInWeek: firstDayInt, today: today)
         
         let widgetDays = basicDays.map { day in
             WidgetCalendarDay(
@@ -60,7 +60,7 @@ struct WidgetDataHelper {
             year: year,
             month: month,
             days: widgetDays,
-            weekdays: CalendarGridHelper.weekdays
+            weekdays: CalendarGridHelper.weekdays(firstDayInWeek: firstDayInWeek)
         )
     }
     
@@ -75,7 +75,8 @@ struct WidgetDataHelper {
         return "\(year) / \(month)"
     }
     
-    static func getWeekNumber(for date: Date) -> Int {
-        return CalendarGridHelper.calculateWeekOfYear(for: date)
+    static func getWeekNumber(for date: Date, firstDayInWeek: FirstDayInWeek = .sunday) -> Int {
+        let firstDayInt: Int = firstDayInWeek == .monday ? 2 : 1
+        return CalendarGridHelper.calculateWeekOfYear(for: date, firstDayInWeek: firstDayInt)
     }
 }

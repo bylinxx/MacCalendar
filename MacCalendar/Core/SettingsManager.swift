@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-
 enum DisplayMode: String, CaseIterable, Identifiable {
     case icon = "图标"
     case date = "日期"
@@ -64,8 +63,96 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
 }
 
 struct SettingsManager {
-    static let sharedDefaults = UserDefaults(suiteName: "group.Lin.MacCalendar")!
     
+    static let widgetBundleID = "Lin.MacCalendar.MacCalendarWidget"
+    
+    static let sharedDefaults: UserDefaults = .standard
+    
+    static var sharedSettingsFileURL: URL {
+        let bundleID = Bundle.main.bundleIdentifier ?? ""
+        if bundleID == widgetBundleID {
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            return docs.appendingPathComponent("shared_settings.json")
+        } else {
+            let home = FileManager.default.homeDirectoryForCurrentUser
+            return home
+                .appendingPathComponent("Library")
+                .appendingPathComponent("Containers")
+                .appendingPathComponent(widgetBundleID)
+                .appendingPathComponent("Data")
+                .appendingPathComponent("Documents")
+                .appendingPathComponent("shared_settings.json")
+        }
+    }
+    
+    static func loadSharedFromFile() -> SharedSettings? {
+        let fileURL = sharedSettingsFileURL
+        
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let settings = try JSONDecoder().decode(SharedSettings.self, from: data)
+            return settings
+        } catch {
+            return nil
+        }
+    }
+    
+    static func saveSharedToFile(_ settings: SharedSettings) {
+        let fileURL = sharedSettingsFileURL
+        
+        let directoryURL = fileURL.deletingLastPathComponent()
+        if !FileManager.default.fileExists(atPath: directoryURL.path) {
+            try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        }
+        
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted]
+            let data = try encoder.encode(settings)
+            try data.write(to: fileURL, options: .atomic)
+        } catch {}
+    }
+    
+    static func readFromSharedFile() -> SharedSettings {
+        return loadSharedFromFile() ?? SharedSettings()
+    }
+    
+    static func writeToSharedFile(_ settings: SharedSettings) {
+        saveSharedToFile(settings)
+    }
+    
+    static func syncAllToSharedFile() {
+        var settings = SharedSettings(
+            launchAtLogin: sharedDefaults.bool(forKey: "launchAtLogin"),
+            startMinimized: sharedDefaults.bool(forKey: "startMinimized"),
+            displayModeRaw: sharedDefaults.string(forKey: "displayMode") ?? "图标",
+            customFormatString: sharedDefaults.string(forKey: "customFormatString") ?? "yyyy-MM-dd",
+            enableDoubleLine: sharedDefaults.bool(forKey: "enableDoubleLine"),
+            doubleLineTopFormat: sharedDefaults.string(forKey: "doubleLineTopFormat") ?? "HH:mm",
+            doubleLineBottomFormat: sharedDefaults.string(forKey: "doubleLineBottomFormat") ?? "MM-dd",
+            filterCalendarBase64: sharedDefaults.data(forKey: "filterCalendar")?.base64EncodedString() ?? "",
+            firstDayInWeekRaw: sharedDefaults.string(forKey: "firstDayInWeek") ?? "周一",
+            showWeekNumber: sharedDefaults.bool(forKey: "showWeekNumber"),
+            widgetMonthOffset: sharedDefaults.integer(forKey: "widgetMonthOffset"),
+            widgetLastUserActionTime: sharedDefaults.double(forKey: "widgetLastUserActionTime"),
+            updateCheckFrequencyRaw: sharedDefaults.string(forKey: "updateCheckFrequency") ?? "每周",
+            showDaysIndicator: sharedDefaults.object(forKey: "showDaysIndicator") as? Bool ?? true,
+            appearanceModeRaw: sharedDefaults.string(forKey: "appearanceMode") ?? "跟随系统"
+        )
+        
+        if let existing = loadSharedFromFile() {
+            settings.widgetMonthOffset = existing.widgetMonthOffset
+            settings.widgetLastUserActionTime = existing.widgetLastUserActionTime
+        }
+        
+        saveSharedToFile(settings)
+    }
+    
+    // MARK: - Main App @AppStorage properties
     @AppStorage("launchAtLogin", store: sharedDefaults) static var launchAtLogin = false
     @AppStorage("startMinimized", store: sharedDefaults) static var startMinimized = false
     @AppStorage("displayMode", store: sharedDefaults) static var displayMode: DisplayMode = .icon
@@ -81,37 +168,4 @@ struct SettingsManager {
     @AppStorage("updateCheckFrequency", store: sharedDefaults) static var updateCheckFrequency: UpdateCheckFrequency = .weekly
     @AppStorage("showDaysIndicator", store: sharedDefaults) static var showDaysIndicator = true
     @AppStorage("appearanceMode", store: sharedDefaults) static var appearanceMode: AppearanceMode = .system
-    
-    static func migrateSettingsIfNeeded() {
-        let hasMigratedKey = "__hasMigratedToAppGroup"
-        
-        guard !sharedDefaults.bool(forKey: hasMigratedKey) else { return }
-        
-        let keysToMigrate = [
-            "launchAtLogin",
-            "startMinimized",
-            "displayMode",
-            "customFormatString",
-            "enableDoubleLine",
-            "doubleLineTopFormat",
-            "doubleLineBottomFormat",
-            "filterCalendar",
-            "firstDayInWeek",
-            "showWeekNumber",
-            "widgetMonthOffset",
-            "widgetLastUserActionTime",
-            "updateCheckFrequency",
-            "showDaysIndicator",
-            "appearanceMode"
-        ]
-        
-        for key in keysToMigrate {
-            if let value = UserDefaults.standard.object(forKey: key),
-               sharedDefaults.object(forKey: key) == nil {
-                sharedDefaults.set(value, forKey: key)
-            }
-        }
-        
-        sharedDefaults.set(true, forKey: hasMigratedKey)
-    }
 }

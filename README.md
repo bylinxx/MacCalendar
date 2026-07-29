@@ -19,16 +19,29 @@
 
 ## 安装
 
+> [!IMPORTANT]
+> 本软件使用 Ad-Hoc 签名，未进行 Apple 开发者签名。首次运行前**必须**执行以下操作：
+> 
+> ```bash
+> xattr -cr /Applications/MacCalendar.app
+> ```
+> 
+> 否则系统将提示"应用已损坏"或"无法验证开发者"，且桌面小组件将无法显示。
+> 
+> 若上述命令执行后仍无法打开，请前往 **系统设置 → 隐私与安全性**，在"安全性"栏点击 **"仍要打开"**。
+
 > [!NOTE]
 > - **手动安装**
 >   1. 从 [GitHub Releases](https://github.com/bylinxx/MacCalendar/releases/latest) 下载最新版本 dmg 格式的镜像
 >   2. 双击打开下载的 dmg 镜像
->   3. 拖动MacCalendar图标到Applications图标完成安装
->   4. 如何更新？偏好设置->检查更新
+>   3. 拖动 MacCalendar 图标到 Applications 图标完成安装
+>   4. 安装完成后，请在终端执行 `xattr -cr /Applications/MacCalendar.app` 解除系统隔离
+>   5. 首次启动 App 后，打开"系统设置 → 桌面与程序坞 → 小组件"，将 MacCalendar 小组件添加到桌面
+>   6. 如何更新？偏好设置->检查更新
 > - **homebrew安装**
->   1. 在命令行执行 brew tap bylinxx/tap 引入tap
->   2. 在命令行执行 brew install maccalendar 完成安装
->   3. 由于没有购买开发者签名，首次打开会提示“无法验证开发者”或“应用已损坏”，必须在“系统设置 -> 隐私与安全性 -> 安全性”中点击“仍要打开”，或者在终端执行 xattr -cr /Applications/MacCalendar.app 来移除安全隔离标记
+>   1. 在命令行执行 `brew tap bylinxx/tap` 引入 tap
+>   2. 在命令行执行 `brew install maccalendar` 完成安装
+>   3. 安装完成后，请在终端执行 `xattr -cr /Applications/MacCalendar.app` 解除系统隔离
 >   4. 如何更新？偏好设置->检查更新
 
 ## 支持开发

@@ -18,6 +18,14 @@ struct CalendarGridHelper {
         }
     }
     
+    static func weekdays(firstDayInWeek: FirstDayInWeek) -> [String] {
+        if firstDayInWeek == .monday {
+            return ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+        } else {
+            return ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+        }
+    }
+    
     static func generateDateGrid(for date: Date, firstDayInWeek: Int = 2) -> [Date]? {
         guard let monthInterval = calendar.dateInterval(of: .month, for: date) else { return nil }
         

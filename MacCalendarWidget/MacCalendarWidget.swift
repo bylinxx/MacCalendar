@@ -11,59 +11,97 @@ import AppIntents
 
 struct MacCalendarWidgetProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> MacCalendarWidgetEntry {
+        let shared = SettingsManager.readFromSharedFile()
         let displayDate = calculateDisplayDate(for: Date(), context: context, customOffset: 0)
-        return MacCalendarWidgetEntry(date: Date(), configuration: ConfigurationAppIntent(), calendarData: WidgetDataHelper.getCalendarData(for: displayDate, today: Date()))
+        let calendarData = WidgetDataHelper.getCalendarData(for: displayDate, today: Date(), firstDayInWeek: shared.firstDayInWeek)
+        return MacCalendarWidgetEntry(
+            date: Date(),
+            configuration: ConfigurationAppIntent(),
+            calendarData: calendarData,
+            showWeekNumber: shared.showWeekNumber,
+            firstDayInWeek: shared.firstDayInWeek
+        )
     }
 
     func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> MacCalendarWidgetEntry {
+        let shared = SettingsManager.readFromSharedFile()
         let displayDate = calculateDisplayDate(for: Date(), context: context, customOffset: 0)
-        return MacCalendarWidgetEntry(date: Date(), configuration: configuration, calendarData: WidgetDataHelper.getCalendarData(for: displayDate, today: Date()))
+        let calendarData = WidgetDataHelper.getCalendarData(for: displayDate, today: Date(), firstDayInWeek: shared.firstDayInWeek)
+        return MacCalendarWidgetEntry(
+            date: Date(),
+            configuration: configuration,
+            calendarData: calendarData,
+            showWeekNumber: shared.showWeekNumber,
+            firstDayInWeek: shared.firstDayInWeek
+        )
     }
     
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<MacCalendarWidgetEntry> {
+        let shared = SettingsManager.readFromSharedFile()
+        
         var entries: [MacCalendarWidgetEntry] = []
 
         let currentDate = Date()
         let calendar = Calendar.current
         
         let viewingWindowMinutes: TimeInterval = 5 * 60
-        let lastActionTime = SettingsManager.widgetLastUserActionTime
+        let lastActionTime = shared.widgetLastUserActionTime
         let isWindowActive = lastActionTime > 0 && (currentDate.timeIntervalSince1970 - lastActionTime) < viewingWindowMinutes
         let viewingWindowEndDate = Date(timeIntervalSince1970: lastActionTime + viewingWindowMinutes)
         
-        let currentOffset = SettingsManager.widgetMonthOffset
+        let currentOffset = shared.widgetMonthOffset
         
         if isWindowActive {
             let displayDate1 = calculateDisplayDate(for: currentDate, context: context, customOffset: currentOffset)
-            let calendarData1 = WidgetDataHelper.getCalendarData(for: displayDate1, today: currentDate)
-            entries.append(MacCalendarWidgetEntry(date: currentDate, configuration: configuration, calendarData: calendarData1))
+            let calendarData1 = WidgetDataHelper.getCalendarData(for: displayDate1, today: currentDate, firstDayInWeek: shared.firstDayInWeek)
+            entries.append(MacCalendarWidgetEntry(
+                date: currentDate,
+                configuration: configuration,
+                calendarData: calendarData1,
+                showWeekNumber: shared.showWeekNumber,
+                firstDayInWeek: shared.firstDayInWeek
+            ))
             
             let displayDate2 = calculateDisplayDate(for: viewingWindowEndDate, context: context, customOffset: 0)
-            let calendarData2 = WidgetDataHelper.getCalendarData(for: displayDate2, today: viewingWindowEndDate)
-            entries.append(MacCalendarWidgetEntry(date: viewingWindowEndDate, configuration: configuration, calendarData: calendarData2))
+            let calendarData2 = WidgetDataHelper.getCalendarData(for: displayDate2, today: viewingWindowEndDate, firstDayInWeek: shared.firstDayInWeek)
+            entries.append(MacCalendarWidgetEntry(
+                date: viewingWindowEndDate,
+                configuration: configuration,
+                calendarData: calendarData2,
+                showWeekNumber: shared.showWeekNumber,
+                firstDayInWeek: shared.firstDayInWeek
+            ))
             
             return Timeline(entries: entries, policy: .after(viewingWindowEndDate))
         } else {
-            SettingsManager.widgetLastUserActionTime = 0
-            SettingsManager.widgetMonthOffset = 0
+            var updated = shared
+            updated.widgetLastUserActionTime = 0
+            updated.widgetMonthOffset = 0
+            SettingsManager.writeToSharedFile(updated)
             
             for hourOffset in 0 ..< 24 {
                 let entryDate = calendar.date(byAdding: .hour, value: hourOffset, to: currentDate)!
                 let displayDate = calculateDisplayDate(for: entryDate, context: context, customOffset: 0)
-                let calendarData = WidgetDataHelper.getCalendarData(for: displayDate, today: entryDate)
-                entries.append(MacCalendarWidgetEntry(date: entryDate, configuration: configuration, calendarData: calendarData))
+                let calendarData = WidgetDataHelper.getCalendarData(for: displayDate, today: entryDate, firstDayInWeek: shared.firstDayInWeek)
+                entries.append(MacCalendarWidgetEntry(
+                    date: entryDate,
+                    configuration: configuration,
+                    calendarData: calendarData,
+                    showWeekNumber: shared.showWeekNumber,
+                    firstDayInWeek: shared.firstDayInWeek
+                ))
             }
             
             return Timeline(entries: entries, policy: .atEnd)
         }
     }
     
-    private func calculateDisplayDate(for referenceDate: Date = Date(), context: Context, customOffset: Int? = nil) -> Date {
+    private func calculateDisplayDate(for referenceDate: Date = Date(), context: Context, customOffset: Int? = nil, monthOffset: Int = 0) -> Date {
         if context.family == .systemSmall || context.family == .systemMedium {
             return referenceDate
         }
         
-        let offset = customOffset ?? SettingsManager.widgetMonthOffset
+        let offset = customOffset ?? monthOffset
         if offset == 0 {
             return referenceDate
         }
@@ -75,6 +113,8 @@ struct MacCalendarWidgetEntry: TimelineEntry {
     let date: Date
     let configuration: ConfigurationAppIntent
     let calendarData: WidgetCalendarData
+    let showWeekNumber: Bool
+    let firstDayInWeek: FirstDayInWeek
 }
 
 struct MacCalendarWidgetContentView : View {
@@ -84,19 +124,20 @@ struct MacCalendarWidgetContentView : View {
     var body: some View {
         switch widgetFamily {
         case .systemSmall:
-            MacCalendarSmallWidgetView(calendarData: entry.calendarData)
+            MacCalendarSmallWidgetView(calendarData: entry.calendarData, firstDayInWeek: entry.firstDayInWeek)
         case .systemMedium:
-            MacCalendarMediumWidgetView(calendarData: entry.calendarData)
+            MacCalendarMediumWidgetView(calendarData: entry.calendarData, firstDayInWeek: entry.firstDayInWeek)
         case .systemLarge:
-            MacCalendarLargeWidgetView(calendarData: entry.calendarData)
+            MacCalendarLargeWidgetView(calendarData: entry.calendarData, showWeekNumber: entry.showWeekNumber, firstDayInWeek: entry.firstDayInWeek)
         default:
-            MacCalendarSmallWidgetView(calendarData: entry.calendarData)
+            MacCalendarSmallWidgetView(calendarData: entry.calendarData, firstDayInWeek: entry.firstDayInWeek)
         }
     }
 }
 
 struct MacCalendarSmallWidgetView: View {
     let calendarData: WidgetCalendarData
+    let firstDayInWeek: FirstDayInWeek
     var today: WidgetCalendarDay? { calendarData.days.first(where: { $0.isToday }) }
     
     var body: some View {
@@ -123,7 +164,7 @@ struct MacCalendarSmallWidgetView: View {
             
             if let today = today {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(String(format: "%d年%d月(第%d周)", calendarData.year, calendarData.month, WidgetDataHelper.getWeekNumber(for: today.date)))
+                    Text(String(format: "%d年%d月(第%d周)", calendarData.year, calendarData.month, WidgetDataHelper.getWeekNumber(for: today.date, firstDayInWeek: firstDayInWeek)))
                         .font(.system(size: 13))
                         .foregroundColor(.primary.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -150,6 +191,7 @@ struct MacCalendarSmallWidgetView: View {
 
 struct MacCalendarMediumWidgetView: View {
     let calendarData: WidgetCalendarData
+    let firstDayInWeek: FirstDayInWeek
     
     var currentWeekDays: [WidgetCalendarDay] {
         guard let todayIndex = calendarData.days.firstIndex(where: { $0.isToday }) else { return [] }
@@ -194,7 +236,7 @@ struct MacCalendarMediumWidgetView: View {
                         .fill(Color.red)
                         .frame(width: 3, height: 12)
                     
-                    Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", calendarData.year, calendarData.month, today.dayOfMonth, WidgetDataHelper.getWeekNumber(for: today.date), LunarDateHelper.getGanzhiYear(for: today.date), LunarDateHelper.getZodiac(for: today.date), LunarDateHelper.getLunarMonth(for: today.date), LunarDateHelper.getLunarDay(for: today.date)))
+                    Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", calendarData.year, calendarData.month, today.dayOfMonth, WidgetDataHelper.getWeekNumber(for: today.date, firstDayInWeek: firstDayInWeek), LunarDateHelper.getGanzhiYear(for: today.date), LunarDateHelper.getZodiac(for: today.date), LunarDateHelper.getLunarMonth(for: today.date), LunarDateHelper.getLunarDay(for: today.date)))
                         .font(.system(size: 12))
                         .foregroundColor(.primary.opacity(0.6))
                         .lineLimit(1)
@@ -207,7 +249,8 @@ struct MacCalendarMediumWidgetView: View {
 
 struct MacCalendarLargeWidgetView: View {
     let calendarData: WidgetCalendarData
-    let showWeekNumber = SettingsManager.showWeekNumber
+    let showWeekNumber: Bool
+    let firstDayInWeek: FirstDayInWeek
     
     var columns: [GridItem] {
         let count = showWeekNumber ? 8 : 7
@@ -268,7 +311,7 @@ struct MacCalendarLargeWidgetView: View {
             LazyVGrid(columns: columns, spacing: 0) {
                 ForEach(weekGroups.indices, id: \.self) { index in
                     let group = weekGroups[index]
-                    let weekNum = WidgetDataHelper.getWeekNumber(for: group.first?.date ?? Date())
+                    let weekNum = WidgetDataHelper.getWeekNumber(for: group.first?.date ?? Date(), firstDayInWeek: firstDayInWeek)
                     
                     if showWeekNumber {
                         Text("\(weekNum)")
@@ -296,7 +339,7 @@ struct MacCalendarLargeWidgetView: View {
                     .fill(Color.red)
                     .frame(width: 3, height: 12)
                 
-                Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", todayYear, todayMonth, todayDay, WidgetDataHelper.getWeekNumber(for: today), LunarDateHelper.getGanzhiYear(for: today), LunarDateHelper.getZodiac(for: today), LunarDateHelper.getLunarMonth(for: today), LunarDateHelper.getLunarDay(for: today)))
+                Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", todayYear, todayMonth, todayDay, WidgetDataHelper.getWeekNumber(for: today, firstDayInWeek: firstDayInWeek), LunarDateHelper.getGanzhiYear(for: today), LunarDateHelper.getZodiac(for: today), LunarDateHelper.getLunarMonth(for: today), LunarDateHelper.getLunarDay(for: today)))
                     .font(.system(size: 12))
                     .foregroundColor(.primary.opacity(0.6))
                     .lineLimit(1)

@@ -26,11 +26,13 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     private var isPopoverAnimating = false
     
     private var appearanceObserver: NSObjectProtocol?
+    private var syncWorkItem: DispatchWorkItem?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         
-        SettingsManager.migrateSettingsIfNeeded()
+        fixCorruptedDefaultsIfNeeded()
+        SettingsManager.syncAllToSharedFile()
         
         _ = calendarManager
         
@@ -167,10 +169,33 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             queue: .main
         ) { [weak self] _ in
             self?.updateAppearance()
-            WidgetCenter.shared.reloadAllTimelines()
+            self?.syncWorkItem?.cancel()
+            let workItem = DispatchWorkItem {
+                SettingsManager.syncAllToSharedFile()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+            self?.syncWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: NSApplication.didResignActiveNotification, object: nil)
+    }
+    
+    private func fixCorruptedDefaultsIfNeeded() {
+        let defaults = UserDefaults.standard
+        
+        let checks: [(String, String)] = [
+            ("customFormatString", "yyyy-MM-dd"),
+            ("doubleLineTopFormat", "HH:mm"),
+            ("doubleLineBottomFormat", "MM-dd"),
+            ("displayMode", "图标"),
+        ]
+        
+        for (key, defaultValue) in checks {
+            if let value = defaults.string(forKey: key), value.count <= 2, value != defaultValue {
+                defaults.set(defaultValue, forKey: key)
+            }
+        }
     }
     
     private func updateAppearance() {

@@ -27,8 +27,10 @@ struct ChangeMonthIntent: AppIntent {
     }
     
     func perform() async throws -> some IntentResult {
-        SettingsManager.widgetMonthOffset += offset
-        SettingsManager.widgetLastUserActionTime = Date().timeIntervalSince1970
+        var settings = SettingsManager.readFromSharedFile()
+        settings.widgetMonthOffset += offset
+        settings.widgetLastUserActionTime = Date().timeIntervalSince1970
+        SettingsManager.writeToSharedFile(settings)
         WidgetCenter.shared.reloadAllTimelines()
         return .result()
     }
@@ -39,8 +41,10 @@ struct ResetMonthIntent: AppIntent {
     static var description: IntentDescription { "将日历切换回当前月份" }
     
     func perform() async throws -> some IntentResult {
-        SettingsManager.widgetMonthOffset = 0
-        SettingsManager.widgetLastUserActionTime = Date().timeIntervalSince1970
+        var settings = SettingsManager.readFromSharedFile()
+        settings.widgetMonthOffset = 0
+        settings.widgetLastUserActionTime = Date().timeIntervalSince1970
+        SettingsManager.writeToSharedFile(settings)
         WidgetCenter.shared.reloadAllTimelines()
         return .result()
     }
