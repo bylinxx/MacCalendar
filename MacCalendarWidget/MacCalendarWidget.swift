@@ -216,14 +216,14 @@ struct MacCalendarMediumWidgetView: View {
                 HStack(spacing: 0) {
                     ForEach(calendarData.weekdays, id: \.self) { day in
                         Text(day)
-                            .font(.system(size: 10))
+                            .font(.system(size: 12))
                             .frame(maxWidth: .infinity)
                     }
                 }
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 0) {
                     ForEach(currentWeekDays, id: \.date) { day in
-                        MacCalendarDayCellView(day: day, size: .medium)
+                        MacCalendarDayCellView(day: day)
                     }
                 }
             }
@@ -321,7 +321,7 @@ struct MacCalendarLargeWidgetView: View {
                     }
                     
                     ForEach(group, id: \.date) { day in
-                        MacCalendarLargeDayCellView(day: day)
+                        MacCalendarDayCellView(day: day)
                     }
                 }
             }
@@ -349,15 +349,15 @@ struct MacCalendarLargeWidgetView: View {
     }
 }
 
-struct MacCalendarLargeDayCellView: View {
+struct MacCalendarDayCellView: View {
     let day: WidgetCalendarDay
     
     var body: some View {
         ZStack(alignment: .center) {
             if day.isToday {
                 Circle()
-                    .fill(Color.red)
-                    .frame(width: 35, height: 35)
+                    .fill(Color.red.opacity(0.8))
+                    .frame(width: 33, height: 33)
             }
             
             if let offday = day.offday {
@@ -372,7 +372,7 @@ struct MacCalendarLargeDayCellView: View {
             
             VStack(spacing: -2) {
                 Text("\(day.dayOfMonth)")
-                    .font(.system(size: 12))
+                    .font(.system(size: 12, weight: day.isToday ? .medium : .regular))
                     .foregroundColor(day.isToday ? .white : (day.isCurrentMonth ? .primary : .gray.opacity(0.5)))
                 
                 Text(!day.holidays.isEmpty ? day.holidays[0] : (day.solarTerm ?? day.shortLunar))
@@ -383,47 +383,6 @@ struct MacCalendarLargeDayCellView: View {
             .frame(height: 35)
         }
         .frame(width: 35, height: 35, alignment: .center)
-    }
-}
-
-enum MacCalendarDayCellSize {
-    case medium, large
-}
-
-struct MacCalendarDayCellView: View {
-    let day: WidgetCalendarDay
-    let size: MacCalendarDayCellSize
-    
-    var body: some View {
-        ZStack(alignment: .center) {
-            if day.isToday {
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: size == .medium ? 28 : 26, height: size == .medium ? 28 : 26)
-            }
-            
-            VStack(spacing: 0) {
-                Text("\(day.dayOfMonth)")
-                    .font(.system(size: size == .medium ? 13 : 12))
-                    .foregroundColor(day.isToday ? .white : (day.isCurrentMonth ? .primary : .primary.opacity(0.3)))
-                
-                Text(day.shortLunar)
-                    .font(.system(size: size == .medium ? 8 : 7))
-                    .foregroundColor(day.isToday ? .white.opacity(0.8) : (day.isCurrentMonth ? .primary.opacity(0.4) : .primary.opacity(0.2)))
-                    .lineLimit(1)
-            }
-            .frame(height: size == .medium ? 34 : 32)
-            
-            if let offday = day.offday {
-                Text(offday ? "休" : "班")
-                    .font(.system(size: 7))
-                    .foregroundColor(.white)
-                    .frame(width: 10, height: 10)
-                    .background(offday ? .red : .gray)
-                    .cornerRadius(2)
-                    .offset(x: size == .medium ? 10 : 9, y: size == .medium ? -10 : -9)
-            }
-        }
     }
 }
 
