@@ -329,22 +329,19 @@ struct MacCalendarLargeWidgetView: View {
             
             Spacer()
             
-            let today = Date()
-            let todayYear = Calendar.current.component(.year, from: today)
-            let todayMonth = Calendar.current.component(.month, from: today)
-            let todayDay = Calendar.current.component(.day, from: today)
-            
-            HStack(spacing: 5) {
-                Capsule()
-                    .fill(Color.red)
-                    .frame(width: 3, height: 12)
-                
-                Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", todayYear, todayMonth, todayDay, WidgetDataHelper.getWeekNumber(for: today, firstDayInWeek: firstDayInWeek), LunarDateHelper.getGanzhiYear(for: today), LunarDateHelper.getZodiac(for: today), LunarDateHelper.getLunarMonth(for: today), LunarDateHelper.getLunarDay(for: today)))
-                    .font(.system(size: 12))
-                    .foregroundColor(.primary.opacity(0.6))
-                    .lineLimit(1)
+            if let today = calendarData.days.first(where: { $0.isToday }) {
+                HStack(spacing: 5) {
+                    Capsule()
+                        .fill(Color.red)
+                        .frame(width: 3, height: 12)
+                    
+                    Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", calendarData.year, calendarData.month, today.dayOfMonth, WidgetDataHelper.getWeekNumber(for: today.date, firstDayInWeek: firstDayInWeek), LunarDateHelper.getGanzhiYear(for: today.date), LunarDateHelper.getZodiac(for: today.date), LunarDateHelper.getLunarMonth(for: today.date), LunarDateHelper.getLunarDay(for: today.date)))
+                        .font(.system(size: 12))
+                        .foregroundColor(.primary.opacity(0.6))
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
