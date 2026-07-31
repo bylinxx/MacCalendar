@@ -128,7 +128,7 @@ struct MacCalendarWidgetContentView : View {
         case .systemMedium:
             MacCalendarMediumWidgetView(calendarData: entry.calendarData, firstDayInWeek: entry.firstDayInWeek)
         case .systemLarge:
-            MacCalendarLargeWidgetView(calendarData: entry.calendarData, showWeekNumber: entry.showWeekNumber, firstDayInWeek: entry.firstDayInWeek)
+            MacCalendarLargeWidgetView(calendarData: entry.calendarData, entryDate: entry.date, showWeekNumber: entry.showWeekNumber, firstDayInWeek: entry.firstDayInWeek)
         default:
             MacCalendarSmallWidgetView(calendarData: entry.calendarData, firstDayInWeek: entry.firstDayInWeek)
         }
@@ -249,6 +249,7 @@ struct MacCalendarMediumWidgetView: View {
 
 struct MacCalendarLargeWidgetView: View {
     let calendarData: WidgetCalendarData
+    let entryDate: Date
     let showWeekNumber: Bool
     let firstDayInWeek: FirstDayInWeek
     
@@ -329,19 +330,17 @@ struct MacCalendarLargeWidgetView: View {
             
             Spacer()
             
-            if let today = calendarData.days.first(where: { $0.isToday }) {
-                HStack(spacing: 5) {
-                    Capsule()
-                        .fill(Color.red)
-                        .frame(width: 3, height: 12)
-                    
-                    Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", calendarData.year, calendarData.month, today.dayOfMonth, WidgetDataHelper.getWeekNumber(for: today.date, firstDayInWeek: firstDayInWeek), LunarDateHelper.getGanzhiYear(for: today.date), LunarDateHelper.getZodiac(for: today.date), LunarDateHelper.getLunarMonth(for: today.date), LunarDateHelper.getLunarDay(for: today.date)))
-                        .font(.system(size: 12))
-                        .foregroundColor(.primary.opacity(0.6))
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 5) {
+                Capsule()
+                    .fill(Color.red)
+                    .frame(width: 3, height: 12)
+                
+                Text(verbatim: String(format: "%d年%d月%d日（第%d周）%@（%@）%@%@", Calendar.current.component(.year, from: entryDate), Calendar.current.component(.month, from: entryDate), Calendar.current.component(.day, from: entryDate), WidgetDataHelper.getWeekNumber(for: entryDate, firstDayInWeek: firstDayInWeek), LunarDateHelper.getGanzhiYear(for: entryDate), LunarDateHelper.getZodiac(for: entryDate), LunarDateHelper.getLunarMonth(for: entryDate), LunarDateHelper.getLunarDay(for: entryDate)))
+                    .font(.system(size: 12))
+                    .foregroundColor(.primary.opacity(0.6))
+                    .lineLimit(1)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
