@@ -221,7 +221,7 @@ struct MacCalendarMediumWidgetView: View {
                     }
                 }
                 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 0) {
+                HStack(spacing: 0) {
                     ForEach(currentWeekDays, id: \.date) { day in
                         MacCalendarDayCellView(day: day)
                     }
@@ -252,11 +252,6 @@ struct MacCalendarLargeWidgetView: View {
     let entryDate: Date
     let showWeekNumber: Bool
     let firstDayInWeek: FirstDayInWeek
-    
-    var columns: [GridItem] {
-        let count = showWeekNumber ? 8 : 7
-        return Array(repeating: GridItem(.flexible()), count: count)
-    }
     
     var weekGroups: [[WidgetCalendarDay]] {
         stride(from: 0, to: calendarData.days.count, by: 7).map {
@@ -309,20 +304,22 @@ struct MacCalendarLargeWidgetView: View {
                 }
             }
             
-            LazyVGrid(columns: columns, spacing: 0) {
+            VStack(spacing: 0) {
                 ForEach(weekGroups.indices, id: \.self) { index in
                     let group = weekGroups[index]
                     let weekNum = WidgetDataHelper.getWeekNumber(for: group.first?.date ?? Date(), firstDayInWeek: firstDayInWeek)
                     
-                    if showWeekNumber {
-                        Text("\(weekNum)")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray.opacity(0.5))
-                            .frame(width: 30, height: 35)
-                    }
-                    
-                    ForEach(group, id: \.date) { day in
-                        MacCalendarDayCellView(day: day)
+                    HStack(spacing: 0) {
+                        if showWeekNumber {
+                            Text("\(weekNum)")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray.opacity(0.5))
+                                .frame(width: 30, height: 35)
+                        }
+                        
+                        ForEach(group, id: \.date) { day in
+                            MacCalendarDayCellView(day: day)
+                        }
                     }
                 }
             }
