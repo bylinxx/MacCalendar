@@ -31,7 +31,6 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         
-        fixCorruptedDefaultsIfNeeded()
         SettingsManager.syncAllToSharedFile()
         
         _ = calendarManager
@@ -179,23 +178,6 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: NSApplication.didResignActiveNotification, object: nil)
-    }
-    
-    private func fixCorruptedDefaultsIfNeeded() {
-        let defaults = UserDefaults.standard
-        
-        let checks: [(String, String)] = [
-            ("customFormatString", "yyyy-MM-dd"),
-            ("doubleLineTopFormat", "HH:mm"),
-            ("doubleLineBottomFormat", "MM-dd"),
-            ("displayMode", "图标"),
-        ]
-        
-        for (key, defaultValue) in checks {
-            if let value = defaults.string(forKey: key), value.count <= 2, value != defaultValue {
-                defaults.set(defaultValue, forKey: key)
-            }
-        }
     }
     
     private func updateAppearance() {
