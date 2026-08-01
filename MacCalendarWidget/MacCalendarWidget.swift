@@ -224,6 +224,7 @@ struct MacCalendarMediumWidgetView: View {
                 HStack(spacing: 0) {
                     ForEach(currentWeekDays, id: \.date) { day in
                         MacCalendarDayCellView(day: day)
+                            .frame(maxWidth: .infinity)
                     }
                 }
             }
@@ -319,6 +320,7 @@ struct MacCalendarLargeWidgetView: View {
                         
                         ForEach(group, id: \.date) { day in
                             MacCalendarDayCellView(day: day)
+                                .frame(maxWidth: .infinity)
                         }
                     }
                 }
