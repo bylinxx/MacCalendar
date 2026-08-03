@@ -9,11 +9,12 @@ import Foundation
 import SwiftUI
 
 enum DisplayMode: String, CaseIterable, Identifiable {
+    case hidden = "不显示"
     case icon = "图标"
     case date = "日期"
     case time = "时间"
     case custom = "自定义"
-    
+
     var id: Self { self }
 }
 

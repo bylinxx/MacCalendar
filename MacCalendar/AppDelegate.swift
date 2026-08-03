@@ -137,6 +137,26 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         
         // 立即更新显示
         calendarIcon.updateDisplayOutput()
+
+        // 监听显示模式变化，隐藏/显示菜单栏图标
+        NotificationCenter.default
+            .publisher(for: UserDefaults.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self = self, let button = self.statusItem.button else { return }
+                let mode = SettingsManager.displayMode
+                if mode == .hidden {
+                    button.isHidden = true
+                } else {
+                    button.isHidden = false
+                }
+            }
+            .store(in: &cancellables)
+
+        // 初始应用显示模式
+        if SettingsManager.displayMode == .hidden {
+            statusItem.button?.isHidden = true
+        }
         
         popover = NSPopover()
         popover.behavior = .transient

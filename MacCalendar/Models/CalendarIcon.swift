@@ -121,9 +121,12 @@ class CalendarIcon: ObservableObject {
     
     private func getUpdateInterval() -> (interval: TimeInterval, component: Calendar.Component) {
         switch SettingsManager.displayMode {
+        case .hidden:
+            return (86400, .day) // 不显示模式，天级更新即可
+
         case .icon:
             return (86400, .day) // 天级更新
-            
+
         case .time:
             return (1.0, .second) // 秒级更新
             
@@ -219,6 +222,9 @@ class CalendarIcon: ObservableObject {
         let currentDate = Date()
         
         switch SettingsManager.displayMode {
+        case .hidden:
+            displayOutput = ""
+            return
         case .icon:
             displayOutput = ""
         case .date:
