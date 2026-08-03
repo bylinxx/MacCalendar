@@ -38,19 +38,18 @@ struct MacCalendarWidgetProvider: AppIntentTimelineProvider {
     
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<MacCalendarWidgetEntry> {
         let shared = SettingsManager.readFromSharedFile()
-        
+
         var entries: [MacCalendarWidgetEntry] = []
 
         let currentDate = Date()
         let calendar = Calendar.current
-        
+
         let viewingWindowMinutes: TimeInterval = 5 * 60
         let lastActionTime = shared.widgetLastUserActionTime
         let isWindowActive = lastActionTime > 0 && (currentDate.timeIntervalSince1970 - lastActionTime) < viewingWindowMinutes
-        let viewingWindowEndDate = Date(timeIntervalSince1970: lastActionTime + viewingWindowMinutes)
-        
+
         let currentOffset = shared.widgetMonthOffset
-        
+
         if isWindowActive {
             let displayDate1 = calculateDisplayDate(for: currentDate, context: context, customOffset: currentOffset)
             let calendarData1 = WidgetDataHelper.getCalendarData(for: displayDate1, today: currentDate, firstDayInWeek: shared.firstDayInWeek)
@@ -61,24 +60,33 @@ struct MacCalendarWidgetProvider: AppIntentTimelineProvider {
                 showWeekNumber: shared.showWeekNumber,
                 firstDayInWeek: shared.firstDayInWeek
             ))
-            
-            let displayDate2 = calculateDisplayDate(for: viewingWindowEndDate, context: context, customOffset: 0)
-            let calendarData2 = WidgetDataHelper.getCalendarData(for: displayDate2, today: viewingWindowEndDate, firstDayInWeek: shared.firstDayInWeek)
+
+            // Reset offset immediately so next refresh shows current month
+            var updated = shared
+            updated.widgetMonthOffset = 0
+            updated.widgetLastUserActionTime = 0
+            SettingsManager.writeToSharedFile(updated)
+
+            // Switch to current month after 5 seconds
+            // so closing & reopening the widget shows the current month
+            let switchDate = currentDate.addingTimeInterval(5)
+            let displayDate2 = calculateDisplayDate(for: switchDate, context: context, customOffset: 0)
+            let calendarData2 = WidgetDataHelper.getCalendarData(for: displayDate2, today: switchDate, firstDayInWeek: shared.firstDayInWeek)
             entries.append(MacCalendarWidgetEntry(
-                date: viewingWindowEndDate,
+                date: switchDate,
                 configuration: configuration,
                 calendarData: calendarData2,
                 showWeekNumber: shared.showWeekNumber,
                 firstDayInWeek: shared.firstDayInWeek
             ))
-            
-            return Timeline(entries: entries, policy: .after(viewingWindowEndDate))
+
+            return Timeline(entries: entries, policy: .after(switchDate))
         } else {
             var updated = shared
             updated.widgetLastUserActionTime = 0
             updated.widgetMonthOffset = 0
             SettingsManager.writeToSharedFile(updated)
-            
+
             for hourOffset in 0 ..< 24 {
                 let entryDate = calendar.date(byAdding: .hour, value: hourOffset, to: currentDate)!
                 let displayDate = calculateDisplayDate(for: entryDate, context: context, customOffset: 0)
@@ -91,7 +99,7 @@ struct MacCalendarWidgetProvider: AppIntentTimelineProvider {
                     firstDayInWeek: shared.firstDayInWeek
                 ))
             }
-            
+
             return Timeline(entries: entries, policy: .atEnd)
         }
     }

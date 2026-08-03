@@ -6,6 +6,7 @@
 
 # Build
 build/
+.derived/
 
 # Package
 *.dmg

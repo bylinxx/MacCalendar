@@ -110,14 +110,24 @@ DERIVED_DATA="$DERIVED_DATA/$ARCH_TAG"
 
 XCODE=$(xcode-select -p 2>/dev/null) || err "Xcode not found (xcode-select -p failed)"
 
-XCB_FLAGS=(
-    -project "$PROJECT"
-    -scheme "$SCHEME"
-    -destination 'platform=macOS'
-    "${ARCH_FLAGS[@]}"
-    SYMROOT="$BUILD_DIR"
-    OBJROOT="$DERIVED_DATA"
-)
+# -destination and -arch conflict, use one or the other
+if [ ${#ARCH_FLAGS[@]} -eq 0 ]; then
+    XCB_FLAGS=(
+        -project "$PROJECT"
+        -scheme "$SCHEME"
+        -destination 'platform=macOS'
+        SYMROOT="$BUILD_DIR"
+        OBJROOT="$DERIVED_DATA"
+    )
+else
+    XCB_FLAGS=(
+        -project "$PROJECT"
+        -scheme "$SCHEME"
+        "${ARCH_FLAGS[@]}"
+        SYMROOT="$BUILD_DIR"
+        OBJROOT="$DERIVED_DATA"
+    )
+fi
 
 # ----- Commands -----
 if [ "$CMD" = "debug" ] || [ "$CMD" = "run" ]; then
