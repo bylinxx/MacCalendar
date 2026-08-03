@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+
+# Build
+build/
+
+# Package
+*.dmg
