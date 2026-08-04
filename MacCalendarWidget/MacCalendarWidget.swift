@@ -44,7 +44,7 @@ struct MacCalendarWidgetProvider: AppIntentTimelineProvider {
         let currentDate = Date()
         let calendar = Calendar.current
         
-        let viewingWindowMinutes: TimeInterval = 5 * 60
+        let viewingWindowMinutes: TimeInterval = 10
         let lastActionTime = shared.widgetLastUserActionTime
         let isWindowActive = lastActionTime > 0 && (currentDate.timeIntervalSince1970 - lastActionTime) < viewingWindowMinutes
         let viewingWindowEndDate = Date(timeIntervalSince1970: lastActionTime + viewingWindowMinutes)
