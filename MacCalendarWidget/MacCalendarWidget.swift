@@ -135,6 +135,12 @@ struct MacCalendarWidgetContentView : View {
     }
 }
 
+enum MacCalendarWidgetStyle {
+    static let dayNumberSize: CGFloat = 14
+    static let lunarSize: CGFloat = 10
+    static let weekdayHeaderSize: CGFloat = 14
+}
+
 struct MacCalendarSmallWidgetView: View {
     let calendarData: WidgetCalendarData
     let firstDayInWeek: FirstDayInWeek
@@ -216,7 +222,7 @@ struct MacCalendarMediumWidgetView: View {
                 HStack(spacing: 0) {
                     ForEach(calendarData.weekdays, id: \.self) { day in
                         Text(day)
-                            .font(.system(size: 12))
+                            .font(.system(size: MacCalendarWidgetStyle.weekdayHeaderSize))
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -300,7 +306,7 @@ struct MacCalendarLargeWidgetView: View {
                 }
                 ForEach(calendarData.weekdays, id: \.self) { day in
                     Text(day)
-                        .font(.system(size: 12))
+                        .font(.system(size: MacCalendarWidgetStyle.weekdayHeaderSize))
                         .frame(maxWidth: .infinity, minHeight: 35)
                 }
             }
@@ -367,11 +373,11 @@ struct MacCalendarDayCellView: View {
             
             VStack(spacing: -2) {
                 Text("\(day.dayOfMonth)")
-                    .font(.system(size: 12, weight: day.isToday ? .medium : .regular))
+                    .font(.system(size: MacCalendarWidgetStyle.dayNumberSize, weight: day.isToday ? .medium : .regular))
                     .foregroundColor(day.isToday ? .white : (day.isCurrentMonth ? .primary : .gray.opacity(0.5)))
                 
                 Text(!day.holidays.isEmpty ? day.holidays[0] : (day.solarTerm ?? day.shortLunar))
-                    .font(.system(size: 8))
+                    .font(.system(size: MacCalendarWidgetStyle.lunarSize))
                     .foregroundColor(day.isToday ? .white : (day.isCurrentMonth ? .primary : .gray.opacity(0.5)))
                     .lineLimit(1)
             }
