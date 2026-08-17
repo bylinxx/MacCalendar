@@ -62,4 +62,4 @@
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=bylinxx/MacCalendar&type=Timeline)](https://www.star-history.com/#bylinxx/MacCalendar&Timeline)
+[![Star History Chart](https://star-history.dera.page/svg?repos=bylinxx/MacCalendar&type=Timeline)](https://star-history.dera.page/#bylinxx/MacCalendar&Timeline)
