@@ -43,17 +43,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             button.target = self
             button.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
             button.isHidden = false
-            // 初始显示图标：根据当前日期显示对应日期的符号
-            let day = Calendar.current.component(.day, from: Date())
-            let symbolName = "\(day).calendar"
-            let config = NSImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-            if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
-                image.isTemplate = true
-                button.image = image
-            } else if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
-                image.isTemplate = true
-                button.image = image
-            }
+            // 初始显示图标
+            applyStatusIcon(to: button)
         }
         
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -77,24 +68,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
                 }
                 
                 if output == "" {
-                    // 图标模式：根据当前日期显示对应日期的符号
-                    button.title = ""
-                    button.attributedTitle = NSAttributedString(string: "")
-                    
-                    let day = Calendar.current.component(.day, from: Date())
-                    let symbolName = "\(day).calendar"
-                    let config = NSImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-                    
-                    if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
-                        image.isTemplate = true
-                        button.image = image
-                    } else {
-                        // 如果没有对应日期的图标，回退到默认日历图标
-                        if let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
-                            image.isTemplate = true
-                            button.image = image
-                        }
-                    }
+                    // 图标模式 / 日期图标模式
+                    applyStatusIcon(to: button)
                     self.statusItem.length = NSStatusItem.squareLength
                 } else if output.contains("\n") {
                     // 双行显示，使用自定义视图添加到按钮上（按钮本身处理点击）
@@ -185,6 +160,32 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         popover.appearance = mode.nsAppearance
         settingsWindow?.appearance = mode.nsAppearance
         eventEditWindow?.appearance = mode.nsAppearance
+    }
+
+    /// 根据当前显示模式设置菜单栏图标
+    /// - 图标模式：显示 calendar 符号
+    /// - 日期图标模式：根据当前日期显示对应日期的符号（如 28.calendar）
+    private func applyStatusIcon(to button: NSStatusBarButton) {
+        button.title = ""
+        button.attributedTitle = NSAttributedString(string: "")
+
+        let config = NSImage.SymbolConfiguration(pointSize: 18, weight: .regular)
+        let symbolName: String
+        if SettingsManager.displayMode == .dateIcon {
+            let day = Calendar.current.component(.day, from: Date())
+            symbolName = "\(day).calendar"
+        } else {
+            symbolName = "calendar"
+        }
+
+        if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
+            image.isTemplate = true
+            button.image = image
+        } else if let fallback = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
+            // 找不到对应符号时回退到默认日历图标
+            fallback.isTemplate = true
+            button.image = fallback
+        }
     }
     
     @objc func statusItemClicked(sender: NSStatusBarButton) {

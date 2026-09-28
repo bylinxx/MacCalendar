@@ -123,7 +123,10 @@ class CalendarIcon: ObservableObject {
         switch SettingsManager.displayMode {
         case .icon:
             return (86400, .day) // 天级更新
-            
+
+        case .dateIcon:
+            return (86400, .day) // 天级更新
+
         case .time:
             return (1.0, .second) // 秒级更新
             
@@ -220,6 +223,8 @@ class CalendarIcon: ObservableObject {
         
         switch SettingsManager.displayMode {
         case .icon:
+            displayOutput = ""
+        case .dateIcon:
             displayOutput = ""
         case .date:
             dateFormatter.dateFormat = "MM-dd"

@@ -17,7 +17,35 @@ struct SettingsIconView: View {
     @AppStorage("showWeekNumber", store: SettingsManager.sharedDefaults) private var showWeekNumber: Bool = SettingsManager.showWeekNumber
     @AppStorage("showDaysIndicator", store: SettingsManager.sharedDefaults) private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
     @AppStorage("appearanceMode", store: SettingsManager.sharedDefaults) private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
-    
+
+    private var baseMode: DisplayMode {
+        switch displayMode {
+        case .icon, .dateIcon: return .icon
+        default: return displayMode
+        }
+    }
+
+    private var baseModeBinding: Binding<DisplayMode> {
+        Binding(
+            get: { baseMode },
+            set: { newValue in
+                guard newValue != baseMode else { return }
+                if newValue == .icon {
+                    displayMode = .icon
+                } else {
+                    displayMode = newValue
+                }
+            }
+        )
+    }
+
+    private var iconStyleBinding: Binding<DisplayMode> {
+        Binding(
+            get: { displayMode == .dateIcon ? .dateIcon : .icon },
+            set: { displayMode = $0 }
+        )
+    }
+
     var body: some View {
         Form {
             Section {
@@ -27,15 +55,26 @@ struct SettingsIconView: View {
                     }
                 }
                 .pickerStyle(.radioGroup)
-                
-                Picker("菜单栏显示", selection: $displayMode) {
-                    ForEach(DisplayMode.allCases) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
+
+                Picker("菜单栏显示", selection: baseModeBinding) {
+                    Text("图标").tag(DisplayMode.icon)
+                    Text("日期").tag(DisplayMode.date)
+                    Text("时间").tag(DisplayMode.time)
+                    Text("自定义").tag(DisplayMode.custom)
                 }
                 .pickerStyle(.radioGroup)
             }
-            
+
+            if baseMode == .icon {
+                Section {
+                    Picker("图标样式", selection: iconStyleBinding) {
+                        Text("默认图标").tag(DisplayMode.icon)
+                        Text("动态图标").tag(DisplayMode.dateIcon)
+                    }
+                    .pickerStyle(.radioGroup)
+                }
+            }
+
             if displayMode == .custom {
                 Section {
                     Toggle("双行显示", isOn: $enableDoubleLine)

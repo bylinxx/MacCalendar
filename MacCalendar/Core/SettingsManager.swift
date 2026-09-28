@@ -10,6 +10,7 @@ import SwiftUI
 
 enum DisplayMode: String, CaseIterable, Identifiable {
     case icon = "图标"
+    case dateIcon = "日期图标"
     case date = "日期"
     case time = "时间"
     case custom = "自定义"
