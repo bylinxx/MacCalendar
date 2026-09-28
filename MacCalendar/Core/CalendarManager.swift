@@ -166,7 +166,7 @@ class CalendarManager: ObservableObject {
     }
     
     func loadCalendarDays(date: Date) async {
-        await requestAccessIfNeeded()
+        syncAuthorizationStatus()
         
         // 获取月份的开始日期作为缓存键
         guard let monthStart = calendar.dateInterval(of: .month, for: date)?.start else {
@@ -205,7 +205,7 @@ class CalendarManager: ObservableObject {
     }
     
     func loadCalendarInfo() async {
-        await requestAccessIfNeeded()
+        syncAuthorizationStatus()
         guard authorizationStatus == .fullAccess else { return }
         
         let allEKCalendars = eventStore.calendars(for: .event)
@@ -299,11 +299,14 @@ class CalendarManager: ObservableObject {
             .store(in: &cancellables)
     }
     
+    func syncAuthorizationStatus() {
+        authorizationStatus = EKEventStore.authorizationStatus(for: .event)
+    }
+    
     func requestAccessIfNeeded() async {
-        let status = EKEventStore.authorizationStatus(for: .event)
-        authorizationStatus = status
+        syncAuthorizationStatus()
         
-        guard status == .notDetermined else { return }
+        guard authorizationStatus == .notDetermined else { return }
         
         do {
             let granted = try await eventStore.requestFullAccessToEvents()

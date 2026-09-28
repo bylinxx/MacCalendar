@@ -105,6 +105,7 @@ struct SettingsCalendarView: View {
         .formStyle(.grouped)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
+            calendarManager.syncAuthorizationStatus()
             updateAccessStatus()
         }
     }
