@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsIconView: View {
     @AppStorage("displayMode", store: SettingsManager.sharedDefaults) private var displayMode: DisplayMode = SettingsManager.displayMode
+    @AppStorage("customIconOption", store: SettingsManager.sharedDefaults) private var customIconOption: IconDisplayOption = SettingsManager.customIconOption
     @AppStorage("customFormatString", store: SettingsManager.sharedDefaults) private var customFormatString: String = SettingsManager.customFormatString
     @AppStorage("enableDoubleLine", store: SettingsManager.sharedDefaults) private var enableDoubleLine: Bool = SettingsManager.enableDoubleLine
     @AppStorage("doubleLineTopFormat", store: SettingsManager.sharedDefaults) private var doubleLineTopFormat: String = SettingsManager.doubleLineTopFormat
@@ -18,31 +19,49 @@ struct SettingsIconView: View {
     @AppStorage("showDaysIndicator", store: SettingsManager.sharedDefaults) private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
     @AppStorage("appearanceMode", store: SettingsManager.sharedDefaults) private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
 
-    private var baseMode: DisplayMode {
+    private var isCustomMode: Bool {
         switch displayMode {
-        case .icon, .dateIcon: return .icon
-        default: return displayMode
+        case .icon, .dateIcon, .custom:
+            return true
+        default:
+            return false
         }
     }
 
-    private var baseModeBinding: Binding<DisplayMode> {
+    private var menuBarDisplayModeBinding: Binding<DisplayMode> {
         Binding(
-            get: { baseMode },
+            get: {
+                switch displayMode {
+                case .date: return .date
+                case .time: return .time
+                default: return .custom
+                }
+            },
             set: { newValue in
-                guard newValue != baseMode else { return }
-                if newValue == .icon {
-                    displayMode = .icon
-                } else {
-                    displayMode = newValue
+                displayMode = newValue
+            }
+        )
+    }
+
+    private var doubleLineBinding: Binding<Bool> {
+        Binding(
+            get: { enableDoubleLine },
+            set: { newValue in
+                enableDoubleLine = newValue
+                if newValue {
+                    displayMode = .custom
                 }
             }
         )
     }
 
-    private var iconStyleBinding: Binding<DisplayMode> {
+    private var customIconOptionBinding: Binding<IconDisplayOption> {
         Binding(
-            get: { displayMode == .dateIcon ? .dateIcon : .icon },
-            set: { displayMode = $0 }
+            get: { customIconOption },
+            set: { newValue in
+                customIconOption = newValue
+                displayMode = .custom
+            }
         )
     }
 
@@ -56,8 +75,7 @@ struct SettingsIconView: View {
                 }
                 .pickerStyle(.radioGroup)
 
-                Picker("菜单栏显示", selection: baseModeBinding) {
-                    Text("图标").tag(DisplayMode.icon)
+                Picker("菜单栏显示", selection: menuBarDisplayModeBinding) {
                     Text("日期").tag(DisplayMode.date)
                     Text("时间").tag(DisplayMode.time)
                     Text("自定义").tag(DisplayMode.custom)
@@ -65,33 +83,33 @@ struct SettingsIconView: View {
                 .pickerStyle(.radioGroup)
             }
 
-            if baseMode == .icon {
+            if isCustomMode {
                 Section {
-                    Picker("图标样式", selection: iconStyleBinding) {
-                        Text("默认图标").tag(DisplayMode.icon)
-                        Text("动态图标").tag(DisplayMode.dateIcon)
-                    }
-                    .pickerStyle(.radioGroup)
-                }
-            }
-
-            if displayMode == .custom {
-                Section {
-                    Toggle("双行显示", isOn: $enableDoubleLine)
-                    
-                    if !enableDoubleLine {
-                        TextField("输入自定义格式", text: $customFormatString)
-                    }
+                    Toggle("双行显示", isOn: doubleLineBinding)
                     
                     if enableDoubleLine {
                         TextField("上行格式", text: $doubleLineTopFormat)
                         TextField("下行格式", text: $doubleLineBottomFormat)
+                        
+                        Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                    } else {
+                        Picker("显示图标", selection: customIconOptionBinding) {
+                            Text("默认图标").tag(IconDisplayOption.defaultIcon)
+                            Text("动态图标").tag(IconDisplayOption.dynamicIcon)
+                            Text("不显示").tag(IconDisplayOption.none)
+                        }
+                        .pickerStyle(.radioGroup)
+                        
+                        TextField("输入自定义格式", text: $customFormatString)
+                        
+                        Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
                     }
-                    
-                    Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(nil)
                 }
             }
             

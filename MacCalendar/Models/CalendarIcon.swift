@@ -9,8 +9,17 @@ import SwiftUI
 import Combine
 import AppKit
 
+struct StatusDisplayItem: Equatable {
+    var iconSymbolName: String? = nil
+    var text: String = ""
+    var isDoubleLine: Bool = false
+    var doubleLineTopText: String = ""
+    var doubleLineBottomText: String = ""
+}
+
 class CalendarIcon: ObservableObject {
     @Published var displayOutput: String = ""
+    @Published var currentStatus: StatusDisplayItem = StatusDisplayItem()
     
     private var timer: Timer?
     private let dateFormatter = DateFormatter()
@@ -42,6 +51,8 @@ class CalendarIcon: ObservableObject {
                 self?.refreshTimer()
             }
             .store(in: &cancellables)
+        
+        SettingsManager.migrateSettingsIfNeeded()
         
         // 立即更新显示
         updateDisplayOutput()
@@ -220,30 +231,78 @@ class CalendarIcon: ObservableObject {
         dateFormatter.locale = Locale.autoupdatingCurrent
         
         let currentDate = Date()
+        var status = StatusDisplayItem()
         
         switch SettingsManager.displayMode {
         case .icon:
+            status.iconSymbolName = "calendar"
             displayOutput = ""
+            
         case .dateIcon:
+            let day = Calendar.current.component(.day, from: currentDate)
+            status.iconSymbolName = "\(day).calendar"
             displayOutput = ""
+            
         case .date:
             dateFormatter.dateFormat = "MM-dd"
-            displayOutput = dateFormatter.string(from: currentDate)
+            let text = dateFormatter.string(from: currentDate)
+            status.text = text
+            displayOutput = text
+            
         case .time:
             dateFormatter.dateFormat = "HH:mm:ss"
-            displayOutput = dateFormatter.string(from: currentDate)
+            let text = dateFormatter.string(from: currentDate)
+            status.text = text
+            displayOutput = text
+            
         case .custom:
             if SettingsManager.enableDoubleLine {
-                // 双行显示模式：合并上下行内容
                 let topText = processCustomFormat(format: SettingsManager.doubleLineTopFormat, date: currentDate)
                 let bottomText = processCustomFormat(format: SettingsManager.doubleLineBottomFormat, date: currentDate)
                 
-                // 使用换行符连接双行内容
+                status.isDoubleLine = true
+                status.doubleLineTopText = topText
+                status.doubleLineBottomText = bottomText
                 displayOutput = "\(topText)\n\(bottomText)"
             } else {
-                // 单行显示模式
-                displayOutput = processCustomFormat(format: SettingsManager.customFormatString, date: currentDate)
+                let iconOption = SettingsManager.customIconOption
+                let iconSymbol: String?
+                switch iconOption {
+                case .defaultIcon:
+                    iconSymbol = "calendar"
+                case .dynamicIcon:
+                    let day = Calendar.current.component(.day, from: currentDate)
+                    iconSymbol = "\(day).calendar"
+                case .none:
+                    iconSymbol = nil
+                }
+                
+                let rawFormat = SettingsManager.customFormatString
+                let formattedText: String
+                if rawFormat.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    formattedText = ""
+                } else {
+                    formattedText = processCustomFormat(format: rawFormat, date: currentDate)
+                }
+                
+                if iconSymbol != nil && !formattedText.isEmpty {
+                    status.iconSymbolName = iconSymbol
+                    status.text = formattedText
+                } else if let icon = iconSymbol {
+                    status.iconSymbolName = icon
+                    status.text = ""
+                } else if !formattedText.isEmpty {
+                    status.iconSymbolName = nil
+                    status.text = formattedText
+                } else {
+                    status.iconSymbolName = "calendar"
+                    status.text = ""
+                }
+                
+                displayOutput = formattedText
             }
         }
+        
+        currentStatus = status
     }
 }

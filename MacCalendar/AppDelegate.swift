@@ -43,8 +43,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             button.target = self
             button.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .regular)
             button.isHidden = false
-            // 初始显示图标
-            applyStatusIcon(to: button)
+            renderStatus(calendarIcon.currentStatus, on: button)
         }
         
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -55,58 +54,11 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             return event
         }
         
-        calendarIcon.$displayOutput
+        calendarIcon.$currentStatus
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] output in
+            .sink { [weak self] status in
                 guard let self = self, let button = self.statusItem.button else { return }
-                
-                // 移除之前添加的自定义子视图
-                button.subviews.forEach { subview in
-                    if subview is DoubleLineStatusView {
-                        subview.removeFromSuperview()
-                    }
-                }
-                
-                if output == "" {
-                    // 图标模式 / 日期图标模式
-                    applyStatusIcon(to: button)
-                    self.statusItem.length = NSStatusItem.squareLength
-                } else if output.contains("\n") {
-                    // 双行显示，使用自定义视图添加到按钮上（按钮本身处理点击）
-                    let lines = output.components(separatedBy: "\n")
-                    let topText = lines.count > 0 ? lines[0] : ""
-                    let bottomText = lines.count > 1 ? lines[1] : ""
-                    
-                    // 创建双行视图（不处理点击，由按钮本身处理）
-                    let doubleLineView = DoubleLineStatusView(topText: topText, bottomText: bottomText)
-                    
-                    // 清空按钮内容
-                    button.image = nil
-                    button.title = ""
-                    button.attributedTitle = NSAttributedString(string: "")
-                    
-                    // 设置按钮尺寸
-                    self.statusItem.length = doubleLineView.frame.width
-                    
-                    // 设置视图位置，两行居中显示（两行边界在中间）
-                    let centerY = (button.bounds.height - doubleLineView.frame.height) / 2
-                    doubleLineView.frame.origin = NSPoint(
-                        x: (button.bounds.width - doubleLineView.frame.width) / 2,
-                        y: centerY
-                    )
-                    
-                    // 添加到按钮（按钮本身处理点击）
-                    button.addSubview(doubleLineView)
-                    
-                } else {
-                    // 单行显示
-                    button.image = nil
-                    button.attributedTitle = NSAttributedString(string: "")
-                    button.title = output
-                    self.statusItem.length = NSStatusItem.variableLength
-                }
-                
-                button.sizeToFit()
+                self.renderStatus(status, on: button)
             }
             .store(in: &cancellables)
         
@@ -162,30 +114,84 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         eventEditWindow?.appearance = mode.nsAppearance
     }
 
-    /// 根据当前显示模式设置菜单栏图标
-    /// - 图标模式：显示 calendar 符号
-    /// - 日期图标模式：根据当前日期显示对应日期的符号（如 28.calendar）
-    private func applyStatusIcon(to button: NSStatusBarButton) {
-        button.title = ""
-        button.attributedTitle = NSAttributedString(string: "")
-
-        let config = NSImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-        let symbolName: String
-        if SettingsManager.displayMode == .dateIcon {
-            let day = Calendar.current.component(.day, from: Date())
-            symbolName = "\(day).calendar"
-        } else {
-            symbolName = "calendar"
+    private func renderStatus(_ status: StatusDisplayItem, on button: NSStatusBarButton) {
+        button.subviews.forEach { subview in
+            if subview is DoubleLineStatusView {
+                subview.removeFromSuperview()
+            }
         }
-
+        
+        if status.isDoubleLine {
+            let doubleLineView = DoubleLineStatusView(topText: status.doubleLineTopText, bottomText: status.doubleLineBottomText)
+            
+            button.image = nil
+            button.title = ""
+            button.attributedTitle = NSAttributedString(string: "")
+            
+            self.statusItem.length = doubleLineView.frame.width
+            
+            let centerY = (button.bounds.height - doubleLineView.frame.height) / 2
+            doubleLineView.frame.origin = NSPoint(
+                x: (button.bounds.width - doubleLineView.frame.width) / 2,
+                y: centerY
+            )
+            
+            button.addSubview(doubleLineView)
+            button.sizeToFit()
+            return
+        }
+        
+        let hasIcon = status.iconSymbolName != nil
+        let hasText = !status.text.isEmpty
+        
+        if hasIcon && hasText {
+            button.attributedTitle = NSAttributedString(string: "")
+            button.title = status.text
+            button.image = createStatusImage(symbolName: status.iconSymbolName!, pointSize: 15.5)
+            button.imagePosition = .imageLeading
+            self.statusItem.length = NSStatusItem.variableLength
+        } else if let iconName = status.iconSymbolName {
+            button.attributedTitle = NSAttributedString(string: "")
+            button.title = ""
+            button.image = createStatusImage(symbolName: iconName, pointSize: 18)
+            button.imagePosition = .imageOnly
+            self.statusItem.length = NSStatusItem.squareLength
+        } else if hasText {
+            button.image = nil
+            button.attributedTitle = NSAttributedString(string: "")
+            button.title = status.text
+            button.imagePosition = .noImage
+            self.statusItem.length = NSStatusItem.variableLength
+        } else {
+            button.attributedTitle = NSAttributedString(string: "")
+            button.title = ""
+            button.image = createStatusImage(symbolName: "calendar", pointSize: 18)
+            button.imagePosition = .imageOnly
+            self.statusItem.length = NSStatusItem.squareLength
+        }
+        
+        button.sizeToFit()
+    }
+    
+    private func createStatusImage(symbolName: String, pointSize: CGFloat) -> NSImage? {
+        let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
         if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
             image.isTemplate = true
-            button.image = image
+            return image
         } else if let fallback = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
-            // 找不到对应符号时回退到默认日历图标
             fallback.isTemplate = true
-            button.image = fallback
+            return fallback
         }
+        return nil
+    }
+
+    private func applyStatusIcon(to button: NSStatusBarButton) {
+        let day = Calendar.current.component(.day, from: Date())
+        let symbolName = (SettingsManager.displayMode == .dateIcon) ? "\(day).calendar" : "calendar"
+        button.title = ""
+        button.attributedTitle = NSAttributedString(string: "")
+        button.image = createStatusImage(symbolName: symbolName, pointSize: 18)
+        button.imagePosition = .imageOnly
     }
     
     @objc func statusItemClicked(sender: NSStatusBarButton) {

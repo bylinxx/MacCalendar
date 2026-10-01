@@ -18,6 +18,14 @@ enum DisplayMode: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+enum IconDisplayOption: String, CaseIterable, Identifiable, Codable {
+    case defaultIcon = "默认图标"
+    case dynamicIcon = "动态图标"
+    case none = "不显示"
+    
+    var id: Self { self }
+}
+
 enum FirstDayInWeek:String,CaseIterable,Identifiable{
     case monday = "周一"
     case sunday = "周日"
@@ -126,12 +134,39 @@ struct SettingsManager {
         saveSharedToFile(settings)
     }
     
+    static func migrateSettingsIfNeeded() {
+        let migratedKey = "hasMigratedCustomIconDisplay_v1"
+        if !sharedDefaults.bool(forKey: migratedKey) {
+            if let rawMode = sharedDefaults.string(forKey: "displayMode") {
+                if rawMode == DisplayMode.icon.rawValue {
+                    sharedDefaults.set(DisplayMode.custom.rawValue, forKey: "displayMode")
+                    sharedDefaults.set(IconDisplayOption.defaultIcon.rawValue, forKey: "customIconOption")
+                    sharedDefaults.set("", forKey: "customFormatString")
+                } else if rawMode == DisplayMode.dateIcon.rawValue {
+                    sharedDefaults.set(DisplayMode.custom.rawValue, forKey: "displayMode")
+                    sharedDefaults.set(IconDisplayOption.dynamicIcon.rawValue, forKey: "customIconOption")
+                    sharedDefaults.set("", forKey: "customFormatString")
+                } else if rawMode == DisplayMode.custom.rawValue {
+                    if sharedDefaults.string(forKey: "customIconOption") == nil {
+                        sharedDefaults.set(IconDisplayOption.none.rawValue, forKey: "customIconOption")
+                    }
+                }
+            } else {
+                sharedDefaults.set(DisplayMode.custom.rawValue, forKey: "displayMode")
+                sharedDefaults.set(IconDisplayOption.defaultIcon.rawValue, forKey: "customIconOption")
+                sharedDefaults.set("", forKey: "customFormatString")
+            }
+            sharedDefaults.set(true, forKey: migratedKey)
+        }
+    }
+    
     static func syncAllToSharedFile() {
+        migrateSettingsIfNeeded()
         var settings = SharedSettings(
             launchAtLogin: sharedDefaults.bool(forKey: "launchAtLogin"),
             startMinimized: sharedDefaults.bool(forKey: "startMinimized"),
-            displayModeRaw: sharedDefaults.string(forKey: "displayMode") ?? "图标",
-            customFormatString: sharedDefaults.string(forKey: "customFormatString") ?? "yyyy-MM-dd",
+            displayModeRaw: sharedDefaults.string(forKey: "displayMode") ?? "自定义",
+            customFormatString: sharedDefaults.string(forKey: "customFormatString") ?? "",
             enableDoubleLine: sharedDefaults.bool(forKey: "enableDoubleLine"),
             doubleLineTopFormat: sharedDefaults.string(forKey: "doubleLineTopFormat") ?? "HH:mm",
             doubleLineBottomFormat: sharedDefaults.string(forKey: "doubleLineBottomFormat") ?? "MM-dd",
@@ -142,7 +177,8 @@ struct SettingsManager {
             widgetLastUserActionTime: sharedDefaults.double(forKey: "widgetLastUserActionTime"),
             updateCheckFrequencyRaw: sharedDefaults.string(forKey: "updateCheckFrequency") ?? "每周",
             showDaysIndicator: sharedDefaults.object(forKey: "showDaysIndicator") as? Bool ?? true,
-            appearanceModeRaw: sharedDefaults.string(forKey: "appearanceMode") ?? "跟随系统"
+            appearanceModeRaw: sharedDefaults.string(forKey: "appearanceMode") ?? "跟随系统",
+            customIconOptionRaw: sharedDefaults.string(forKey: "customIconOption") ?? "默认图标"
         )
         
         if let existing = loadSharedFromFile() {
@@ -156,8 +192,9 @@ struct SettingsManager {
     // MARK: - Main App @AppStorage properties
     @AppStorage("launchAtLogin", store: sharedDefaults) static var launchAtLogin = false
     @AppStorage("startMinimized", store: sharedDefaults) static var startMinimized = false
-    @AppStorage("displayMode", store: sharedDefaults) static var displayMode: DisplayMode = .icon
-    @AppStorage("customFormatString", store: sharedDefaults) static var customFormatString: String = "yyyy-MM-dd"
+    @AppStorage("displayMode", store: sharedDefaults) static var displayMode: DisplayMode = .custom
+    @AppStorage("customIconOption", store: sharedDefaults) static var customIconOption: IconDisplayOption = .defaultIcon
+    @AppStorage("customFormatString", store: sharedDefaults) static var customFormatString: String = ""
     @AppStorage("enableDoubleLine", store: sharedDefaults) static var enableDoubleLine = false
     @AppStorage("doubleLineTopFormat", store: sharedDefaults) static var doubleLineTopFormat: String = "HH:mm"
     @AppStorage("doubleLineBottomFormat", store: sharedDefaults) static var doubleLineBottomFormat: String = "MM-dd"

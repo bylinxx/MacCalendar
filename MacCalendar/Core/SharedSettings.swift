@@ -23,12 +23,13 @@ struct SharedSettings: Codable {
     var updateCheckFrequencyRaw: String
     var showDaysIndicator: Bool
     var appearanceModeRaw: String
+    var customIconOptionRaw: String
     
     init(
         launchAtLogin: Bool = false,
         startMinimized: Bool = false,
-        displayModeRaw: String = "图标",
-        customFormatString: String = "yyyy-MM-dd",
+        displayModeRaw: String = "自定义",
+        customFormatString: String = "",
         enableDoubleLine: Bool = false,
         doubleLineTopFormat: String = "HH:mm",
         doubleLineBottomFormat: String = "MM-dd",
@@ -39,7 +40,8 @@ struct SharedSettings: Codable {
         widgetLastUserActionTime: Double = 0.0,
         updateCheckFrequencyRaw: String = "每周",
         showDaysIndicator: Bool = true,
-        appearanceModeRaw: String = "跟随系统"
+        appearanceModeRaw: String = "跟随系统",
+        customIconOptionRaw: String = "默认图标"
     ) {
         self.launchAtLogin = launchAtLogin
         self.startMinimized = startMinimized
@@ -56,11 +58,56 @@ struct SharedSettings: Codable {
         self.updateCheckFrequencyRaw = updateCheckFrequencyRaw
         self.showDaysIndicator = showDaysIndicator
         self.appearanceModeRaw = appearanceModeRaw
+        self.customIconOptionRaw = customIconOptionRaw
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case launchAtLogin
+        case startMinimized
+        case displayModeRaw
+        case customFormatString
+        case enableDoubleLine
+        case doubleLineTopFormat
+        case doubleLineBottomFormat
+        case filterCalendarBase64
+        case firstDayInWeekRaw
+        case showWeekNumber
+        case widgetMonthOffset
+        case widgetLastUserActionTime
+        case updateCheckFrequencyRaw
+        case showDaysIndicator
+        case appearanceModeRaw
+        case customIconOptionRaw
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
+        startMinimized = try container.decodeIfPresent(Bool.self, forKey: .startMinimized) ?? false
+        displayModeRaw = try container.decodeIfPresent(String.self, forKey: .displayModeRaw) ?? "自定义"
+        customFormatString = try container.decodeIfPresent(String.self, forKey: .customFormatString) ?? ""
+        enableDoubleLine = try container.decodeIfPresent(Bool.self, forKey: .enableDoubleLine) ?? false
+        doubleLineTopFormat = try container.decodeIfPresent(String.self, forKey: .doubleLineTopFormat) ?? "HH:mm"
+        doubleLineBottomFormat = try container.decodeIfPresent(String.self, forKey: .doubleLineBottomFormat) ?? "MM-dd"
+        filterCalendarBase64 = try container.decodeIfPresent(String.self, forKey: .filterCalendarBase64) ?? ""
+        firstDayInWeekRaw = try container.decodeIfPresent(String.self, forKey: .firstDayInWeekRaw) ?? "周一"
+        showWeekNumber = try container.decodeIfPresent(Bool.self, forKey: .showWeekNumber) ?? false
+        widgetMonthOffset = try container.decodeIfPresent(Int.self, forKey: .widgetMonthOffset) ?? 0
+        widgetLastUserActionTime = try container.decodeIfPresent(Double.self, forKey: .widgetLastUserActionTime) ?? 0.0
+        updateCheckFrequencyRaw = try container.decodeIfPresent(String.self, forKey: .updateCheckFrequencyRaw) ?? "每周"
+        showDaysIndicator = try container.decodeIfPresent(Bool.self, forKey: .showDaysIndicator) ?? true
+        appearanceModeRaw = try container.decodeIfPresent(String.self, forKey: .appearanceModeRaw) ?? "跟随系统"
+        customIconOptionRaw = try container.decodeIfPresent(String.self, forKey: .customIconOptionRaw) ?? "默认图标"
     }
     
     var displayMode: DisplayMode {
-        get { DisplayMode(rawValue: displayModeRaw) ?? .icon }
+        get { DisplayMode(rawValue: displayModeRaw) ?? .custom }
         set { displayModeRaw = newValue.rawValue }
+    }
+    
+    var customIconOption: IconDisplayOption {
+        get { IconDisplayOption(rawValue: customIconOptionRaw) ?? .defaultIcon }
+        set { customIconOptionRaw = newValue.rawValue }
     }
     
     var firstDayInWeek: FirstDayInWeek {
