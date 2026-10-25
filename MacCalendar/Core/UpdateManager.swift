@@ -74,7 +74,7 @@ class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
                 }
                 
                 if let tagName = release["tag_name"] as? String {
-                    let version = tagName.replacingOccurrences(of: "v", with: "")
+                    let version = (tagName.hasPrefix("v") || tagName.hasPrefix("V")) ? String(tagName.dropFirst()) : tagName
                     
                     await MainActor.run {
                         latestVersion = version
@@ -150,7 +150,9 @@ class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
         let tempURL = location
 
         do {
-            let appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            guard let appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+                throw URLError(.cannotCreateFile)
+            }
             let appDir = appSupportDir.appendingPathComponent("MacCalendar")
             
             if !FileManager.default.fileExists(atPath: appDir.path) {
@@ -198,6 +200,7 @@ class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
         }
     }
 
+    /// 挂载 DMG → 暂存 → 校验 → 生成后台安装脚本，App 退出后由脚本完成替换并重启；失败回退手动流程
     func installUpdate(from dmgURL: URL, completion: @escaping (Bool, String?) -> Void) {
         let dmgPathStr = dmgURL.path
         
@@ -220,60 +223,169 @@ class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
-            let task = Process()
-            task.launchPath = "/usr/bin/hdiutil"
-            task.arguments = ["attach", dmgPathStr, "-nobrowse", "-noverify"]
-            
-            let outputPipe = Pipe()
-            let errorPipe = Pipe()
-            task.standardOutput = outputPipe
-            task.standardError = errorPipe
-            
-            do {
-                try task.run()
-                task.waitUntilExit()
-                
-                let output = String(data: outputPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-                let errorOutput = String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-                
-                if task.terminationStatus == 0 {
-                    var mountPoint: String?
-                    for line in output.components(separatedBy: .newlines) {
-                        if let range = line.range(of: "/Volumes/") {
-                            mountPoint = String(line[range.lowerBound...])
-                            break
-                        }
-                    }
-                    
-                    Thread.sleep(forTimeInterval: 0.5)
-                    
-                    if let mp = mountPoint {
-                        let openTask = Process()
-                        openTask.launchPath = "/usr/bin/open"
-                        openTask.arguments = [mp]
-                        try? openTask.run()
-                        openTask.waitUntilExit()
-                    } else {
-                        let openTask = Process()
-                        openTask.launchPath = "/usr/bin/open"
-                        openTask.arguments = ["/Volumes"]
-                        try? openTask.run()
-                        openTask.waitUntilExit()
-                    }
-                    
-                    DispatchQueue.main.async {
-                        completion(true, nil)
-                    }
-                } else {
-                    DispatchQueue.main.async {
-                        completion(false, "挂载失败: exitCode=\(task.terminationStatus), error=\(errorOutput)")
-                    }
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    completion(false, "执行挂载命令失败: \(error.localizedDescription)")
-                }
+            let result = self.performAutoInstall(dmgPath: dmgPathStr)
+            DispatchQueue.main.async {
+                completion(result.success, result.message)
             }
+        }
+    }
+    
+    private struct AutoInstallResult {
+        let success: Bool
+        let message: String?
+    }
+    
+    /// 执行自动安装的前置流程。返回后 App 即可退出（或已回退手动流程）。
+    private func performAutoInstall(dmgPath: String) -> AutoInstallResult {
+        let fm = FileManager.default
+        let pid = ProcessInfo.processInfo.processIdentifier
+        
+        guard let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return AutoInstallResult(success: false, message: "无法定位应用支持目录")
+        }
+        let stagingRoot = appSupport.appendingPathComponent("MacCalendar/Update", isDirectory: true)
+        let mountRoot = stagingRoot.appendingPathComponent("mnt", isDirectory: true)
+        
+        try? fm.removeItem(at: stagingRoot)
+        do {
+            try fm.createDirectory(at: mountRoot, withIntermediateDirectories: true)
+        } catch {
+            return AutoInstallResult(success: false, message: "无法创建暂存目录: \(error.localizedDescription)")
+        }
+        
+        let attach = runProcess("/usr/bin/hdiutil", ["attach", dmgPath, "-nobrowse", "-noverify", "-mountRoot", mountRoot.path])
+        guard attach.status == 0 else {
+            return AutoInstallResult(success: false, message: "挂载失败: \(attach.errOutput.trimmingCharacters(in: .whitespacesAndNewlines))")
+        }
+        
+        guard let volumeDir = try? fm.contentsOfDirectory(at: mountRoot, includingPropertiesForKeys: nil).first,
+              let sourceApp = try? fm.contentsOfDirectory(at: volumeDir, includingPropertiesForKeys: nil).first(where: { $0.pathExtension == "app" }) else {
+            _ = runProcess("/usr/bin/hdiutil", ["detach", mountRoot.path, "-force"])
+            return AutoInstallResult(success: false, message: "安装包内未找到应用程序")
+        }
+        
+        let stagedApp = stagingRoot.appendingPathComponent("MacCalendar.app")
+        let ditto = runProcess("/usr/bin/ditto", [sourceApp.path, stagedApp.path])
+        guard ditto.status == 0, fm.fileExists(atPath: stagedApp.path) else {
+            _ = runProcess("/usr/bin/hdiutil", ["detach", mountRoot.path, "-force"])
+            return AutoInstallResult(success: false, message: "拷贝新版本失败")
+        }
+        
+        guard let bundle = Bundle(path: stagedApp.path),
+              let executable = bundle.infoDictionary?["CFBundleExecutable"] as? String,
+              fm.fileExists(atPath: stagedApp.appendingPathComponent("Contents/MacOS/\(executable)").path),
+              let newVersion = bundle.infoDictionary?["CFBundleShortVersionString"] as? String else {
+            _ = runProcess("/usr/bin/hdiutil", ["detach", mountRoot.path, "-force"])
+            try? fm.removeItem(at: stagedApp)
+            return AutoInstallResult(success: false, message: "安装包校验失败，已取消自动安装")
+        }
+        
+        _ = runProcess("/usr/bin/hdiutil", ["detach", volumeDir.path, "-force"])
+        
+        let destination = Bundle.main.bundleURL.path
+        let destinationParent = (destination as NSString).deletingLastPathComponent
+        guard fm.isWritableFile(atPath: destinationParent) else {
+            _ = runProcess("/usr/bin/open", [stagingRoot.path])
+            return AutoInstallResult(success: true, message: "已打开安装包，请手动将 MacCalendar 拖动到应用程序文件夹完成替换")
+        }
+        
+        let logPath = stagingRoot.appendingPathComponent("install.log").path
+        let scriptPath = stagingRoot.appendingPathComponent("install-update.sh").path
+        let script = """
+        #!/bin/sh
+        # MacCalendar 自动更新辅助脚本（由 App 生成；App 退出后由 launchd 接管继续执行）
+        # 参数: $1=旧App PID  $2=暂存的新App  $3=目标安装路径  $4=日志文件  $5=DMG 挂载点
+        set -u
+        PID="$1"
+        STAGED_APP="$2"
+        DEST="$3"
+        LOG="$4"
+        MOUNT_POINT="$5"
+        
+        log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG" 2>/dev/null || true; }
+        
+        # 1. 等待旧 App 完全退出（最多 2 分钟，超时也继续）
+        COUNT=0
+        while kill -0 "$PID" 2>/dev/null && [ "$COUNT" -lt 600 ]; do
+            sleep 0.2
+            COUNT=$((COUNT + 1))
+        done
+        log "旧进程已退出"
+        
+        # 2. 暂存的新 App 必须完好
+        if [ ! -d "$STAGED_APP" ]; then
+            log "暂存的新版本不存在，放弃自动安装"
+            exit 1
+        fi
+        log "暂存校验通过"
+        
+        # 3. 先拷贝到 .new 再整体替换：任何一步失败都保留旧版本，不会变砖
+        NEW_APP="${DEST}.new"
+        rm -rf "$NEW_APP"
+        if ! ditto "$STAGED_APP" "$NEW_APP"; then
+            log "拷贝新版本失败"
+            rm -rf "$NEW_APP"
+            exit 1
+        fi
+        rm -rf "$DEST"
+        if ! mv "$NEW_APP" "$DEST"; then
+            log "替换失败，尝试恢复"
+            [ -d "$NEW_APP" ] && mv "$NEW_APP" "$DEST"
+            exit 1
+        fi
+        log "替换完成"
+        
+        # 4. 清除隔离属性，避免 Gatekeeper 拦截自动更新的新版本
+        xattr -dr com.apple.quarantine "$DEST" 2>/dev/null || true
+        
+        # 5. 重启新版本
+        open "$DEST"
+        log "已启动新版本"
+        
+        # 6. 清理：卸载可能残留的 DMG 挂载，删除暂存目录
+        [ -n "$MOUNT_POINT" ] && hdiutil detach "$MOUNT_POINT" -force 2>/dev/null || true
+        rm -rf "$(dirname "$STAGED_APP")"
+        log "安装完成"
+        exit 0
+        """
+        
+        guard fm.createFile(atPath: scriptPath, contents: script.data(using: .utf8)) else {
+            _ = runProcess("/usr/bin/open", [stagingRoot.path])
+            return AutoInstallResult(success: true, message: "已打开安装包，请手动将 MacCalendar 拖动到应用程序文件夹完成替换")
+        }
+        
+        let helper = Process()
+        helper.launchPath = "/bin/sh"
+        helper.arguments = [scriptPath, String(pid), stagedApp.path, destination, logPath, volumeDir.path]
+        do {
+            try helper.run()
+        } catch {
+            _ = runProcess("/usr/bin/open", [stagingRoot.path])
+            return AutoInstallResult(success: true, message: "已打开安装包，请手动将 MacCalendar 拖动到应用程序文件夹完成替换")
+        }
+        
+        return AutoInstallResult(success: true, message: "正在安装更新 \(newVersion)，应用将自动重启")
+    }
+    
+    /// 同步执行外部命令并收集输出（会阻塞当前线程，须在非主线程调用）
+    private func runProcess(_ launchPath: String, _ arguments: [String]) -> (status: Int32, output: String, errOutput: String) {
+        let task = Process()
+        task.launchPath = launchPath
+        task.arguments = arguments
+        
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        task.standardOutput = outputPipe
+        task.standardError = errorPipe
+        
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let output = String(data: outputPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+            let errOutput = String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+            return (task.terminationStatus, output, errOutput)
+        } catch {
+            return (-1, "", error.localizedDescription)
         }
     }
 }

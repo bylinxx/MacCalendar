@@ -24,14 +24,15 @@ class CalendarManager: ObservableObject {
     private let eventStore = EKEventStore()
     private var cancellables = Set<AnyCancellable>()
     
-    // 日历数据缓存，键为月份的开始日期
-    private var calendarDataCache: [Date: [CalendarDay]] = [:]
-    // 事件缓存，键为日期范围的开始和结束日期的字符串表示
-    private var eventsCache: [String: [CalendarEvent]] = [:]
+    private var calendarDataCache: [String: (day: Date, days: [CalendarDay])] = [:]
+    private var eventsCache: [String: (day: Date, events: [CalendarEvent])] = [:]
     
     init() {
         Task {
             await loadCalendarDays(date: selectedMonth)
+            
+            // 初始化网格结构基线，防止从未触发 UserDefaults 变化时首次切换周数显示不重建网格
+            updateWeekdays()
             
             getSelectedDayEvents(date: Date())
             
@@ -56,24 +57,32 @@ class CalendarManager: ObservableObject {
             .store(in: &cancellables)
     }
     
+    private var lastGridStructure: (firstDayInWeek: FirstDayInWeek, showWeekNumber: Bool)?
+    
     private func updateWeekdays() {
-        if SettingsManager.firstDayInWeek == .monday {
+        let firstDayInWeek = SettingsManager.firstDayInWeek
+        let showWeekNumber = SettingsManager.showWeekNumber
+        
+        if firstDayInWeek == .monday {
             weekdays = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
         }
         else {
             weekdays = ["周日","周一", "周二", "周三", "周四", "周五", "周六"]
         }
         
-        if SettingsManager.showWeekNumber {
-            weekdays.insert("", at: 0)
+        let structure = (firstDayInWeek, showWeekNumber)
+        let structureChanged = lastGridStructure.map { $0 != structure } ?? false
+        lastGridStructure = structure
+        
+        if structureChanged {
+            Task{
+                await goToCurrentMonth()
+            }
         }
-        Task{
-            await goToCurrentMonth()
-        }
+        getSelectedDayEvents(date: selectedDay)
     }
     func resetToToday() {
         Task {
-            calendarDataCache.removeAll()
             await goToCurrentMonth()
             getSelectedDayEvents(date: Date())
         }
@@ -116,14 +125,20 @@ class CalendarManager: ObservableObject {
     func getSelectedDayEvents(date: Date) {
         selectedDay = date
         let _calendarDays = calendarDays.filter { $0.is_weekNumber == false }
-        if let day = _calendarDays.first(where: { Calendar.Based.isDate($0.date!, inSameDayAs: date) }) {
+        if let day = _calendarDays.first(where: { day in
+            guard let dayDate = day.date else { return false }
+            return Calendar.Based.isDate(dayDate, inSameDayAs: date)
+        }) {
             selectedDayLunar = day.full_lunar ?? ""
         } else {
             selectedDayLunar = ""
         }
         
         var events: [CalendarEvent] = []
-        if let day = _calendarDays.first(where: { Calendar.Based.isDate($0.date!, inSameDayAs: date) }) {
+        if let day = _calendarDays.first(where: { day in
+            guard let dayDate = day.date else { return false }
+            return Calendar.Based.isDate(dayDate, inSameDayAs: date)
+        }) {
             events = day.events
         }
         
@@ -138,7 +153,7 @@ class CalendarManager: ObservableObject {
     private func createDaysIndicatorEvent(date: Date) -> CalendarEvent {
         let greenColor = Color(red: 0.2, green: 0.7, blue: 0.3)
         return CalendarEvent(
-            id: "days-indicator-\(date.timeIntervalSince1970)",
+            id: "\(CalendarEvent.daysIndicatorIDPrefix)\(date.timeIntervalSince1970)",
             calendar_title: nil,
             allowsModify: false,
             title: DateHelper.daysFromToday(to: date),
@@ -173,21 +188,23 @@ class CalendarManager: ObservableObject {
             return
         }
         
-        // 检查缓存中是否存在该月份的数据
-        if let cachedDays = calendarDataCache[monthStart] {
-            self.calendarDays = cachedDays
+        let firstDayInWeek = SettingsManager.firstDayInWeek == .monday ? 2 : 1
+        let showWeekNumber = SettingsManager.showWeekNumber
+        let cacheKey = "\(monthStart.timeIntervalSince1970)|\(firstDayInWeek)|\(showWeekNumber)"
+        
+        if let cached = calendarDataCache[cacheKey], cached.day == calendar.startOfDay(for: Date()) {
+            self.calendarDays = cached.days
             return
         }
         
         guard authorizationStatus == .fullAccess else {
             let days = await generateCalendarGrid(for: date, events: [:])
             // 缓存无事件的日历数据
-            calendarDataCache[monthStart] = days
+            calendarDataCache[cacheKey] = (calendar.startOfDay(for: Date()), days)
             self.calendarDays = days
             return
         }
         
-        let firstDayInWeek = SettingsManager.firstDayInWeek == .monday ? 2 : 1
         guard let gridDates = CalendarGridHelper.generateDateGrid(for: date, firstDayInWeek: firstDayInWeek),
               let firstDate = gridDates.first,
               let lastDate = gridDates.last else {
@@ -200,7 +217,7 @@ class CalendarManager: ObservableObject {
         
         let days = await generateCalendarGrid(for: date, events: groupedEvents)
         // 缓存日历数据
-        calendarDataCache[monthStart] = days
+        calendarDataCache[cacheKey] = (calendar.startOfDay(for: Date()), days)
         self.calendarDays = days
     }
     
@@ -212,15 +229,8 @@ class CalendarManager: ObservableObject {
         
         let savedIDs = getFilterCalendarIds()
         
-        var effectiveIDs = Set<String>()
-        if let savedIDs = savedIDs {
-            effectiveIDs = savedIDs
-            for calendar in allEKCalendars {
-                effectiveIDs.insert(calendar.calendarIdentifier)
-            }
-        } else {
-            effectiveIDs = Set(allEKCalendars.map { $0.calendarIdentifier })
-        }
+        // 切勿并入当前所有日历：否则用户的取消勾选会在重启/事件变更后被重置
+        let effectiveIDs = savedIDs ?? Set(allEKCalendars.map { $0.calendarIdentifier })
         
         let calendarInfos = allEKCalendars.map { calendar in
             CalendarInfo(
@@ -326,10 +336,9 @@ class CalendarManager: ObservableObject {
         return rawName
     }
     private func getEventsByDate(from startDate: Date, to endDate: Date) async -> [CalendarEvent] {
-        // 检查缓存中是否存在该日期范围的事件
         let cacheKey = "\(startDate.timeIntervalSince1970)-\(endDate.timeIntervalSince1970)"
-        if let cachedEvents = eventsCache[cacheKey] {
-            return cachedEvents
+        if let cached = eventsCache[cacheKey], cached.day == calendar.startOfDay(for: Date()) {
+            return cached.events
         }
         
         var calendarsToFetch: [EKCalendar]? = nil
@@ -338,7 +347,7 @@ class CalendarManager: ObservableObject {
             let allCalendars = eventStore.calendars(for: .event)
             calendarsToFetch = allCalendars.filter { ids.contains($0.calendarIdentifier) }
         }
-        if calendarsToFetch == nil || calendarsToFetch!.isEmpty{
+        if calendarsToFetch == nil || calendarsToFetch?.isEmpty == true {
             return []
         }
         
@@ -374,7 +383,7 @@ class CalendarManager: ObservableObject {
         }
         
         // 缓存事件数据
-        eventsCache[cacheKey] = events
+        eventsCache[cacheKey] = (calendar.startOfDay(for: Date()), events)
         return events
     }
     
@@ -399,13 +408,13 @@ class CalendarManager: ObservableObject {
         var groupedEvents = [Date: [CalendarEvent]]()
         
         for event in events {
-            var currentDay = calendar.startOfDay(for: event.startDate)
-            while event.endDate > currentDay {
+            let startDay = calendar.startOfDay(for: event.startDate)
+            // 零时长事件（start == end）也必须归入开始当天，否则会从网格上消失
+            var currentDay = startDay
+            while currentDay < event.endDate || currentDay == startDay {
+                groupedEvents[currentDay, default: []].append(event)
                 guard let nextDay = calendar.date(byAdding: .day, value: 1, to: currentDay) else {
                     break
-                }
-                if event.startDate < nextDay {
-                    groupedEvents[currentDay, default: []].append(event)
                 }
                 currentDay = nextDay
             }

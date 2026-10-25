@@ -113,29 +113,6 @@ struct FeatureItem: View {
     }
 }
 
-// 设置卡片组件
-struct SettingsCard<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading) {
-            content
-        }
-        .padding(16)
-        .background(Color(.windowBackgroundColor))
-        .cornerRadius(12)
-        .shadow(color: .gray.opacity(0.1), radius: 4, x: 0, y: 2)
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-        }
-    }
-}
-
 #Preview {
     SettingsAboutView()
 }

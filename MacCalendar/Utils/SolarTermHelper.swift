@@ -122,6 +122,14 @@ struct SolarTermHelper {
             }
         }
     }
+    private static let termsByMonth: [Int: [SolarTerm]] = {
+        var grouped: [Int: [SolarTerm]] = [:]
+        for term in SolarTerm.allCases {
+            grouped[term.month, default: []].append(term)
+        }
+        return grouped
+    }()
+    
     /// 获取指定日期的节气名称。
     ///
     /// - Parameter date: 需要查询的日期。
@@ -138,7 +146,7 @@ struct SolarTermHelper {
             return nil
         }
 
-        let potentialSolarTerms = SolarTerm.allCases.filter { $0.month == month }
+        let potentialSolarTerms = termsByMonth[month] ?? []
         
         for term in potentialSolarTerms {
             if calculateSolarTermDay(for: term, year: year) == day {

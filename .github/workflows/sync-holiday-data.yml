@@ -1,0 +1,157 @@
+name: Sync Holiday Data
+
+# 自动同步国务院年度放假安排（数据源：NateScarlet/holiday-cn）
+#
+# 工作流程：
+#   1. 每月 1 日自动检查目标年份（1 月查当年，其余月份查次年）的放假数据
+#   2. 官方安排发布后，数据写入 MacCalendar/Data/ 并自动挂接进小组件 bundle
+#   3. 推送到 main 后自动触发 Build and Release 工作流编译发版
+#
+# 也可在 Actions 页面手动触发，并指定年份。
+
+on:
+  schedule:
+    # 每月 1 日 09:00 (UTC+8) 执行一次
+    - cron: "0 1 1 * *"
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "要同步的年份（留空则自动判断：1 月同步当年，其余月份同步次年）"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 拉取代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 确定目标年份
+      - name: Resolve target year
+        id: target
+        run: |
+          if [ -n "${{ inputs.year }}" ]; then
+            YEAR="${{ inputs.year }}"
+          else
+            CURRENT=$(date -u +%Y)
+            if [ "$(date -u +%m)" = "01" ]; then
+              YEAR=$CURRENT
+            else
+              YEAR=$((CURRENT + 1))
+            fi
+          fi
+          echo "目标年份: $YEAR"
+          echo "year=$YEAR" >> "$GITHUB_OUTPUT"
+
+      # 3. 下载数据并校验
+      #    国务院通常在前一年 11 月发布次年安排，未发布时 holiday-cn 只有空占位（days 为空数组）
+      - name: Download year data
+        run: |
+          YEAR=${{ steps.target.outputs.year }}
+          SOURCE="https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/${YEAR}.json"
+          if ! curl -fsSL --retry 3 "$SOURCE" -o "/tmp/${YEAR}.json"; then
+            echo "::notice::${YEAR}.json 下载失败或不存在，跳过"
+            exit 0
+          fi
+          if [ "$(jq '.days | length' "/tmp/${YEAR}.json")" = "0" ]; then
+            echo "::notice::${YEAR} 年放假安排官方尚未发布，跳过"
+            exit 0
+          fi
+          cp "/tmp/${YEAR}.json" "MacCalendar/Data/${YEAR}.json"
+          echo "${YEAR} 年放假数据已就绪"
+
+      # 4. 把新数据挂接进小组件的 Resources 构建阶段
+      #    App target 使用文件夹同步（fileSystemSynchronizedGroups），新 JSON 自动进 bundle；
+      #    Widget target 是显式引用，需要维护 pbxproj，否则小组件读不到休/班数据。
+      - name: Wire data into widget bundle
+        run: |
+          ruby - "${{ steps.target.outputs.year }}" <<'RUBY'
+          require "securerandom"
+
+          year     = ARGV[0]
+          pbx_path = "MacCalendar.xcodeproj/project.pbxproj"
+          filename = "#{year}.json"
+
+          src = File.read(pbx_path, encoding: "UTF-8")
+
+          if src.include?("path = #{filename};")
+            puts "pbxproj 已包含 #{filename}，无需修改"
+            exit 0
+          end
+
+          def fresh_uuid(taken)
+            loop do
+              uuid = SecureRandom.hex(12).upcase
+              return uuid unless taken.include?(uuid)
+            end
+          end
+
+          existing = src.scan(/[0-9A-F]{24}/).uniq
+          ref_uuid    = fresh_uuid(existing)
+          build_uuid  = fresh_uuid(existing + [ref_uuid])
+
+          # 1) PBXFileReference section：新增文件引用
+          anchor = "/* End PBXFileReference section */"
+          raise "找不到 #{anchor}" unless src.include?(anchor)
+          src.sub!(anchor, "\t\t#{ref_uuid} /* #{filename} */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = #{filename}; sourceTree = \"<group>\"; };\n#{anchor}") ||
+            raise("插入 PBXFileReference 失败")
+
+          # 2) PBXBuildFile section：新增构建文件条目
+          anchor = "/* End PBXBuildFile section */"
+          raise "找不到 #{anchor}" unless src.include?(anchor)
+          src.sub!(anchor, "\t\t#{build_uuid} /* #{filename} in Resources */ = {isa = PBXBuildFile; fileRef = #{ref_uuid} /* #{filename} */; };\n#{anchor}") ||
+            raise("插入 PBXBuildFile 失败")
+
+          # 3) Data 分组 children：把文件引用挂到分组下
+          pattern = /(isa = PBXGroup;\n\t\t\tchildren = \(\n(?:\t\t\t\t[0-9A-F]{24} \/\* \d{4}\.json \*\/,\n)+)(\t\t\t\);\n\t\t\tpath = MacCalendar\/Data;)/
+          src.sub!(pattern, "\\1\t\t\t\t#{ref_uuid} /* #{filename} */,\n\\2") ||
+            raise("挂接 Data 分组失败")
+
+          # 4) Widget target 的 Resources 构建阶段：加入拷贝列表
+          pattern = /(0C311177300F94A1004301F5 \/\* Resources \*\/ = \{\n\t\t\tisa = PBXResourcesBuildPhase;\n\t\t\tbuildActionMask = \d+;\n\t\t\tfiles = \(\n(?:\t\t\t\t[0-9A-F]{24} \/\* \d{4}\.json in Resources \*\/,\n)*)(\t\t\t\);)/
+          src.sub!(pattern, "\\1\t\t\t\t#{build_uuid} /* #{filename} in Resources */,\n\\2") ||
+            raise("挂接 Widget Resources 阶段失败")
+
+          File.write(pbx_path, src)
+          puts "pbxproj 已更新：#{filename} → fileRef #{ref_uuid}, buildFile #{build_uuid}"
+          RUBY
+
+      # 5. 校验：四处挂接必须齐全，缺一处都说明 pbxproj 结构异常，不能提交
+      - name: Verify wiring
+        run: |
+          YEAR=${{ steps.target.outputs.year }}
+          PBX="MacCalendar.xcodeproj/project.pbxproj"
+          FAIL=0
+          for anchor in "path = ${YEAR}.json;" "${YEAR}.json in Resources" "MacCalendar/Data"; do
+            if ! grep -q "$anchor" "$PBX"; then
+              echo "::error::pbxproj 缺少 [$anchor]，挂接不完整"
+              FAIL=1
+            fi
+          done
+          [ "$FAIL" = "0" ] || exit 1
+          # JSON 必须可解析
+          jq empty "MacCalendar/Data/${YEAR}.json"
+          echo "校验通过：${YEAR} 年数据与 pbxproj 挂接完整"
+
+      # 6. 提交并推送
+      #    不带 [skip ci]：数据更新推送到 main 后自动触发编译发版，
+      #    保证放假数据在生效日前随新版送达用户（如 2027 年数据须在 2027-01-01 前上线）。
+      - name: Commit and push
+        run: |
+          YEAR=${{ steps.target.outputs.year }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "MacCalendar/Data/${YEAR}.json" MacCalendar.xcodeproj/project.pbxproj
+          if git diff-index --quiet HEAD; then
+            echo "放假数据无变化，无需提交"
+          else
+            git commit -m "chore: 更新 ${YEAR} 年放假安排数据"
+            git push origin main
+            echo "已推送，将自动触发编译发版"
+          fi

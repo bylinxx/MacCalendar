@@ -9,11 +9,23 @@ import Foundation
 
 
 struct DateHelper{
-    static func formatDate(date: Date, format: String, localeIdentifier: String = Locale.current.identifier) -> String {
+    private static var gregorianCalendarCache: [Bool: Calendar] = [:]
+    private static var formatterCache: [String: DateFormatter] = [:]
+    
+    static func gregorianCalendar(mondayFirst: Bool) -> Calendar {
+        if let cached = gregorianCalendarCache[mondayFirst] {
+            return cached
+        }
         var calendar = Calendar(identifier: .gregorian)
-        let isMondayFirst = SettingsManager.firstDayInWeek == .monday
-        calendar.firstWeekday = isMondayFirst ? 2 : 1
+        calendar.firstWeekday = mondayFirst ? 2 : 1
         calendar.minimumDaysInFirstWeek = 1
+        gregorianCalendarCache[mondayFirst] = calendar
+        return calendar
+    }
+    
+    static func formatDate(date: Date, format: String, localeIdentifier: String = Locale.current.identifier) -> String {
+        let isMondayFirst = SettingsManager.firstDayInWeek == .monday
+        let calendar = gregorianCalendar(mondayFirst: isMondayFirst)
         
         // 如果是单纯请求周数，直接返回计算值，不走 Formatter
         if format == "w" || format == "ww" {
@@ -30,10 +42,22 @@ struct DateHelper{
                                .replacingOccurrences(of: "w", with: "\(week)")
         }
         
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: localeIdentifier)
-        formatter.calendar = calendar
-        formatter.dateFormat = finalFormat
+        let cacheKey = localeIdentifier + "|" + finalFormat
+        let formatter: DateFormatter
+        if let cached = formatterCache[cacheKey] {
+            formatter = cached
+        } else {
+            let newFormatter = DateFormatter()
+            newFormatter.locale = Locale(identifier: localeIdentifier)
+            newFormatter.calendar = calendar
+            newFormatter.dateFormat = finalFormat
+            // 格式组合有限（内置格式 + 用户自定义格式），异常增多时整体重置防止无限增长
+            if formatterCache.count > 32 {
+                formatterCache.removeAll()
+            }
+            formatterCache[cacheKey] = newFormatter
+            formatter = newFormatter
+        }
         
         return formatter.string(from: date)
     }

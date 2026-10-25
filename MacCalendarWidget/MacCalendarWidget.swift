@@ -79,20 +79,19 @@ struct MacCalendarWidgetProvider: AppIntentTimelineProvider {
             updated.widgetMonthOffset = 0
             SettingsManager.writeToSharedFile(updated)
             
-            for hourOffset in 0 ..< 24 {
-                let entryDate = calendar.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-                let displayDate = calculateDisplayDate(for: entryDate, context: context, customOffset: 0)
-                let calendarData = WidgetDataHelper.getCalendarData(for: displayDate, today: entryDate, firstDayInWeek: shared.firstDayInWeek)
-                entries.append(MacCalendarWidgetEntry(
-                    date: entryDate,
-                    configuration: configuration,
-                    calendarData: calendarData,
-                    showWeekNumber: shared.showWeekNumber,
-                    firstDayInWeek: shared.firstDayInWeek
-                ))
+            // 月历内容只在跨天/跨月时变化，逐小时 entry 完全相同，故只保留当前时刻与下一个变化点
+            let startOfToday = calendar.startOfDay(for: currentDate)
+            let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday) ?? startOfToday.addingTimeInterval(86400)
+            var startOfNextMonth: Date?
+            if let monthInterval = calendar.dateInterval(of: .month, for: currentDate) {
+                startOfNextMonth = calendar.date(byAdding: .month, value: 1, to: monthInterval.start)
             }
+            let nextChange = min(startOfTomorrow, startOfNextMonth ?? startOfTomorrow)
             
-            return Timeline(entries: entries, policy: .atEnd)
+            entries.append(makeEntry(for: currentDate, context: context, configuration: configuration, shared: shared))
+            entries.append(makeEntry(for: nextChange, context: context, configuration: configuration, shared: shared))
+            
+            return Timeline(entries: entries, policy: .after(nextChange))
         }
     }
     
@@ -106,6 +105,18 @@ struct MacCalendarWidgetProvider: AppIntentTimelineProvider {
             return referenceDate
         }
         return Calendar.current.date(byAdding: .month, value: offset, to: referenceDate) ?? referenceDate
+    }
+    
+    private func makeEntry(for entryDate: Date, context: Context, configuration: ConfigurationAppIntent, shared: SharedSettings) -> MacCalendarWidgetEntry {
+        let displayDate = calculateDisplayDate(for: entryDate, context: context, customOffset: 0)
+        let calendarData = WidgetDataHelper.getCalendarData(for: displayDate, today: entryDate, firstDayInWeek: shared.firstDayInWeek)
+        return MacCalendarWidgetEntry(
+            date: entryDate,
+            configuration: configuration,
+            calendarData: calendarData,
+            showWeekNumber: shared.showWeekNumber,
+            firstDayInWeek: shared.firstDayInWeek
+        )
     }
 }
 

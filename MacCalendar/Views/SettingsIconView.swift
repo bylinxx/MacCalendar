@@ -129,23 +129,3 @@ struct SettingsIconView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-
-// 自定义单选按钮组件
-struct RadioButton: View {
-    let selected: Bool
-    
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(selected ? Color.blue : Color.gray.opacity(0.3), lineWidth: 2)
-                .frame(width: 20, height: 20)
-            if selected {
-                Circle()
-                    .fill(Color.blue)
-                    .frame(width: 10, height: 10)
-                    .animation(.spring(), value: selected)
-            }
-        }
-        .contentShape(Circle())
-    }
-}

@@ -12,16 +12,16 @@
 		0C31118B300F94A2004301F5 /* MacCalendarWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0C311179300F94A1004301F5 /* MacCalendarWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		0C311191300F94A2004301F5 /* 2015.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2002E89390000C92A10 /* 2015.json */; };
 		0C311192300F94A2004301F5 /* 2016.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2012E89390000C92A10 /* 2016.json */; };
-		0C311193300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C311194300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C311195300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C311196300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C311197300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C311198300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C311199300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C31119A300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C31119B300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		0C31119C300F94A2004301F5 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		0C311193300F94A2004301F5 /* 2017.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2022E89390000C92A10 /* 2017.json */; };
+		0C311194300F94A2004301F5 /* 2018.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2032E89390000C92A10 /* 2018.json */; };
+		0C311195300F94A2004301F5 /* 2019.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2042E89390000C92A10 /* 2019.json */; };
+		0C311196300F94A2004301F5 /* 2020.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2052E89390000C92A10 /* 2020.json */; };
+		0C311197300F94A2004301F5 /* 2021.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2062E89390000C92A10 /* 2021.json */; };
+		0C311198300F94A2004301F5 /* 2022.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2072E89390000C92A10 /* 2022.json */; };
+		0C311199300F94A2004301F5 /* 2023.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2082E89390000C92A10 /* 2023.json */; };
+		0C31119A300F94A2004301F5 /* 2024.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D2092E89390000C92A10 /* 2024.json */; };
+		0C31119B300F94A2004301F5 /* 2025.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D20A2E89390000C92A10 /* 2025.json */; };
+		0C31119C300F94A2004301F5 /* 2026.json in Resources */ = {isa = PBXBuildFile; fileRef = 0CE2D20B2E89390000C92A10 /* 2026.json */; };
 		0C31119D300F94A2004301F5 /* MacCalendar/Utils/LunarDateHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE2D2212E89390000C92A10 /* MacCalendar/Utils/LunarDateHelper.swift */; };
 		0C31119E300F94A2004301F5 /* MacCalendar/Utils/HolidayHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE2D2222E89390000C92A10 /* MacCalendar/Utils/HolidayHelper.swift */; };
 		0C31119F300F94A2004301F5 /* MacCalendar/Utils/SolarTermHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE2D2232E89390000C92A10 /* MacCalendar/Utils/SolarTermHelper.swift */; };
@@ -282,7 +282,6 @@
 			knownRegions = (
 				en,
 				Base,
-				"zh-Hans",
 			);
 			mainGroup = 0CE2D1D52E89321A00C92A10;
 			minimizedProjectReferenceProxies = 1;
@@ -304,16 +303,16 @@
 			files = (
 				0C311191300F94A2004301F5 /* 2015.json in Resources */,
 				0C311192300F94A2004301F5 /* 2016.json in Resources */,
-				0C311193300F94A2004301F5 /* (null) in Resources */,
-				0C311194300F94A2004301F5 /* (null) in Resources */,
-				0C311195300F94A2004301F5 /* (null) in Resources */,
-				0C311196300F94A2004301F5 /* (null) in Resources */,
-				0C311197300F94A2004301F5 /* (null) in Resources */,
-				0C311198300F94A2004301F5 /* (null) in Resources */,
-				0C311199300F94A2004301F5 /* (null) in Resources */,
-				0C31119A300F94A2004301F5 /* (null) in Resources */,
-				0C31119B300F94A2004301F5 /* (null) in Resources */,
-				0C31119C300F94A2004301F5 /* (null) in Resources */,
+				0C311193300F94A2004301F5 /* 2017.json in Resources */,
+				0C311194300F94A2004301F5 /* 2018.json in Resources */,
+				0C311195300F94A2004301F5 /* 2019.json in Resources */,
+				0C311196300F94A2004301F5 /* 2020.json in Resources */,
+				0C311197300F94A2004301F5 /* 2021.json in Resources */,
+				0C311198300F94A2004301F5 /* 2022.json in Resources */,
+				0C311199300F94A2004301F5 /* 2023.json in Resources */,
+				0C31119A300F94A2004301F5 /* 2024.json in Resources */,
+				0C31119B300F94A2004301F5 /* 2025.json in Resources */,
+				0C31119C300F94A2004301F5 /* 2026.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,7 +383,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.7.20;
 				PRODUCT_BUNDLE_IDENTIFIER = Lin.MacCalendar.MacCalendarWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -421,7 +420,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.7.20;
 				PRODUCT_BUNDLE_IDENTIFIER = Lin.MacCalendar.MacCalendarWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -594,7 +593,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.7.20;
 				PRODUCT_BUNDLE_IDENTIFIER = Lin.MacCalendar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -655,7 +654,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.7.20;
 				PRODUCT_BUNDLE_IDENTIFIER = Lin.MacCalendar;
 				PRODUCT_NAME = "$(TARGET_NAME)";

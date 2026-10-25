@@ -18,8 +18,11 @@ struct CalendarView: View {
     }
     
     var columns: [GridItem] {
-        let count = SettingsManager.showWeekNumber ? 8 : 7
-        return Array(repeating: GridItem(.flexible()), count: count)
+        if SettingsManager.showWeekNumber {
+            // 周数列固定窄宽，避免打开周数后日期列被拉宽
+            return [GridItem(.fixed(26), spacing: 0)] + Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
+        }
+        return Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
     }
     let calendar = Calendar.Based
 
@@ -57,7 +60,12 @@ struct CalendarView: View {
                     }
             }
             
-            HStack {
+            HStack(spacing: 0) {
+                // 周数列占位，与网格首列同宽
+                if SettingsManager.showWeekNumber {
+                    Color.clear
+                        .frame(width: 26)
+                }
                 ForEach(calendarManager.weekdays, id: \.self) { day in
                         VStack(spacing: 4) {
                             Text(day)
@@ -66,23 +74,23 @@ struct CalendarView: View {
                         .frame(maxWidth: .infinity, minHeight: 35)
                         .cornerRadius(6)
                     }
-                }
+            }
             
             LazyVGrid(columns: columns, spacing: 0) {
                 ForEach(calendarManager.calendarDays, id: \.self) { day in
                     if day.is_weekNumber == true {
-                        Text("\(day.weekNumber!)")
+                        Text("\(day.weekNumber ?? 0)")
                             .font(.system(size: 12))
                             .foregroundStyle(.gray.opacity(0.5))
                     }
-                    else{
+                    else if let date = day.date {
                         ZStack{
                             if day.is_today {
                                 Circle()
                                     .fill(Color.red)
                                     .frame(width: 35, height: 35, alignment: .center)
                             }
-                            if calendar.isDate(day.date!, equalTo: calendarManager.selectedDay, toGranularity: .day){
+                            if calendar.isDate(date, equalTo: calendarManager.selectedDay, toGranularity: .day){
                                 Circle()
                                     .fill(Color.red.opacity(0.3))
                                     .frame(width: 35, height: 35, alignment: .center)
@@ -97,7 +105,7 @@ struct CalendarView: View {
                                     .offset(x:12,y:-12)
                             }
                             VStack(spacing: -2) {
-                                Text("\(calendar.component(.day, from: day.date!))")
+                                Text("\(calendar.component(.day, from: date))")
                                     .font(.system(size: 12))
                                     .foregroundColor(day.is_today ? .white : (day.is_currentMonth ? .primary : .gray.opacity(0.5)))
                                 
@@ -108,9 +116,9 @@ struct CalendarView: View {
                             .frame(height:35)
                             .cornerRadius(6)
                             .contentShape(Rectangle())
-                            if !day.events.isEmpty {
+                            if let firstEvent = day.events.first {
                                 Circle()
-                                    .fill(day.events.first!.color.color)
+                                    .fill(firstEvent.color.color)
                                     .frame(width: 5, height: 5)
                                     .offset(y:15)
                             }
@@ -118,7 +126,7 @@ struct CalendarView: View {
                         .frame(width: 35, height: 35, alignment: .center)
                         .contentShape(Circle())
                         .onTapGesture {
-                            calendarManager.getSelectedDayEvents(date: day.date!)
+                            calendarManager.getSelectedDayEvents(date: date)
                         }
                     }
                 }

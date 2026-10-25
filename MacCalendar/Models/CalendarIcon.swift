@@ -18,7 +18,6 @@ struct StatusDisplayItem: Equatable {
 }
 
 class CalendarIcon: ObservableObject {
-    @Published var displayOutput: String = ""
     @Published var currentStatus: StatusDisplayItem = StatusDisplayItem()
     
     private var timer: Timer?
@@ -183,7 +182,7 @@ class CalendarIcon: ObservableObject {
         
         let isDoubleW = format.contains("ww")
         
-        var processedFormat = format
+        let processedFormat = format
             .replacingOccurrences(of: "gy", with: placeholderGY)
             .replacingOccurrences(of: "gm", with: placeholderGM)
             .replacingOccurrences(of: "lm", with: placeholderLM)
@@ -196,9 +195,7 @@ class CalendarIcon: ObservableObject {
         var result = dateFormatter.string(from: date)
                 
         if hasWeek {
-            var calendar = Calendar(identifier: .gregorian)
-            calendar.firstWeekday = SettingsManager.firstDayInWeek == .monday ? 2 : 1
-            calendar.minimumDaysInFirstWeek = 1
+            let calendar = DateHelper.gregorianCalendar(mondayFirst: SettingsManager.firstDayInWeek == .monday)
             
             let weekValue = calendar.component(.weekOfYear, from: date)
             let weekString = isDoubleW ? String(format: "%02d", weekValue) : "\(weekValue)"
@@ -236,24 +233,20 @@ class CalendarIcon: ObservableObject {
         switch SettingsManager.displayMode {
         case .icon:
             status.iconSymbolName = "calendar"
-            displayOutput = ""
             
         case .dateIcon:
             let day = Calendar.current.component(.day, from: currentDate)
             status.iconSymbolName = "\(day).calendar"
-            displayOutput = ""
             
         case .date:
             dateFormatter.dateFormat = "MM-dd"
             let text = dateFormatter.string(from: currentDate)
             status.text = text
-            displayOutput = text
             
         case .time:
             dateFormatter.dateFormat = "HH:mm:ss"
             let text = dateFormatter.string(from: currentDate)
             status.text = text
-            displayOutput = text
             
         case .custom:
             if SettingsManager.enableDoubleLine {
@@ -263,7 +256,6 @@ class CalendarIcon: ObservableObject {
                 status.isDoubleLine = true
                 status.doubleLineTopText = topText
                 status.doubleLineBottomText = bottomText
-                displayOutput = "\(topText)\n\(bottomText)"
             } else {
                 let iconOption = SettingsManager.customIconOption
                 let iconSymbol: String?
@@ -298,11 +290,11 @@ class CalendarIcon: ObservableObject {
                     status.iconSymbolName = "calendar"
                     status.text = ""
                 }
-                
-                displayOutput = formattedText
             }
         }
         
-        currentStatus = status
+        if status != currentStatus {
+            currentStatus = status
+        }
     }
 }

@@ -31,6 +31,7 @@ struct CodableColor: Codable, Hashable {
 }
 
 struct CalendarEvent:Identifiable,Hashable {
+    static let daysIndicatorIDPrefix = "days-indicator-"
     let id:String
     /// 日历标题
     let calendar_title:String?
@@ -56,6 +57,7 @@ struct CalendarEvent:Identifiable,Hashable {
     var organizer:CalendarEventPerson?
     /// 受邀者
     var attendees:[CalendarEventPerson]?
+    var isDaysIndicator: Bool { id.hasPrefix(Self.daysIndicatorIDPrefix) }
 }
 
 struct CalendarEventPerson:Hashable,Equatable

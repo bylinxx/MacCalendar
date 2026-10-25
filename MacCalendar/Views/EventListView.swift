@@ -28,7 +28,7 @@ struct EventListView: View {
                     Spacer()
                     Text(calendarManager.selectedDayLunar)
                 }
-                Text("今天无日程")
+                Text("当天无日程")
                     .frame(maxWidth: .infinity, alignment: .center)
             }
         }

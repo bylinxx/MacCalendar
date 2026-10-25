@@ -9,7 +9,6 @@ import Foundation
 
 struct SharedSettings: Codable {
     var launchAtLogin: Bool
-    var startMinimized: Bool
     var displayModeRaw: String
     var customFormatString: String
     var enableDoubleLine: Bool
@@ -27,7 +26,6 @@ struct SharedSettings: Codable {
     
     init(
         launchAtLogin: Bool = false,
-        startMinimized: Bool = false,
         displayModeRaw: String = "自定义",
         customFormatString: String = "",
         enableDoubleLine: Bool = false,
@@ -44,7 +42,6 @@ struct SharedSettings: Codable {
         customIconOptionRaw: String = "默认图标"
     ) {
         self.launchAtLogin = launchAtLogin
-        self.startMinimized = startMinimized
         self.displayModeRaw = displayModeRaw
         self.customFormatString = customFormatString
         self.enableDoubleLine = enableDoubleLine
@@ -63,7 +60,6 @@ struct SharedSettings: Codable {
     
     enum CodingKeys: String, CodingKey {
         case launchAtLogin
-        case startMinimized
         case displayModeRaw
         case customFormatString
         case enableDoubleLine
@@ -83,7 +79,6 @@ struct SharedSettings: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         launchAtLogin = try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
-        startMinimized = try container.decodeIfPresent(Bool.self, forKey: .startMinimized) ?? false
         displayModeRaw = try container.decodeIfPresent(String.self, forKey: .displayModeRaw) ?? "自定义"
         customFormatString = try container.decodeIfPresent(String.self, forKey: .customFormatString) ?? ""
         enableDoubleLine = try container.decodeIfPresent(Bool.self, forKey: .enableDoubleLine) ?? false

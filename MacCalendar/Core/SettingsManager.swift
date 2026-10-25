@@ -80,7 +80,7 @@ struct SettingsManager {
     static var sharedSettingsFileURL: URL {
         let bundleID = Bundle.main.bundleIdentifier ?? ""
         if bundleID == widgetBundleID {
-            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
             return docs.appendingPathComponent("shared_settings.json")
         } else {
             let home = FileManager.default.homeDirectoryForCurrentUser
@@ -164,7 +164,6 @@ struct SettingsManager {
         migrateSettingsIfNeeded()
         var settings = SharedSettings(
             launchAtLogin: sharedDefaults.bool(forKey: "launchAtLogin"),
-            startMinimized: sharedDefaults.bool(forKey: "startMinimized"),
             displayModeRaw: sharedDefaults.string(forKey: "displayMode") ?? "自定义",
             customFormatString: sharedDefaults.string(forKey: "customFormatString") ?? "",
             enableDoubleLine: sharedDefaults.bool(forKey: "enableDoubleLine"),
@@ -191,7 +190,6 @@ struct SettingsManager {
     
     // MARK: - Main App @AppStorage properties
     @AppStorage("launchAtLogin", store: sharedDefaults) static var launchAtLogin = false
-    @AppStorage("startMinimized", store: sharedDefaults) static var startMinimized = false
     @AppStorage("displayMode", store: sharedDefaults) static var displayMode: DisplayMode = .custom
     @AppStorage("customIconOption", store: sharedDefaults) static var customIconOption: IconDisplayOption = .defaultIcon
     @AppStorage("customFormatString", store: sharedDefaults) static var customFormatString: String = ""

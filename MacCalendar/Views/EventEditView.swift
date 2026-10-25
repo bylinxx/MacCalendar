@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+extension Notification.Name {
+    static let closeEventEditWindow = Notification.Name("closeEventEditWindow")
+}
+
 struct EventEditView: View {
     @EnvironmentObject var calendarManager: CalendarManager
     @AppStorage("appearanceMode", store: SettingsManager.sharedDefaults) private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
@@ -38,6 +42,19 @@ struct EventEditView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            if editedEvent.allowsModify == false {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.fill")
+                    Text("此日程来自只读日历，不能修改")
+                        .font(.caption)
+                }
+                .foregroundColor(.orange)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.orange.opacity(0.12))
+            }
+            
             VStack(alignment: .leading, spacing: 10) {
                 HStack{
                     Image(systemName: "t.square").font(.title3).frame(width: 35)
@@ -109,6 +126,14 @@ struct EventEditView: View {
                     .cornerRadius(10)
                     
                     Button("保存") {
+                        if editedEvent.allowsModify == false {
+                            self.alertInfo = AlertInfo(
+                                title: "无法保存",
+                                message: "此日程来自只读日历，不能修改。",
+                                onDismiss: nil
+                            )
+                            return
+                        }
                         Task {
                             do {
                                 try await calendarManager.updateEvent(event: editedEvent)
@@ -116,6 +141,7 @@ struct EventEditView: View {
                                     title: "保存成功",
                                     message: "修改已成功保存。",
                                     onDismiss: {
+                                        NotificationCenter.default.post(name: .closeEventEditWindow, object: nil)
                                     }
                                 )
                                 
@@ -138,7 +164,6 @@ struct EventEditView: View {
         }
         .frame(width: 480, height: 450)
         .navigationTitle("编辑日程")
-        .disabled(editedEvent.allowsModify == false)
         .alert("放弃修改", isPresented: $showingResetConfirmation) {
             Button("放弃", role: .destructive) {
                 editedEvent = event

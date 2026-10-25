@@ -27,6 +27,8 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     
     private var appearanceObserver: NSObjectProtocol?
     private var syncWorkItem: DispatchWorkItem?
+    private var lastRenderedStatus: StatusDisplayItem?
+    private static var statusImageCache: [String: NSImage] = [:]
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
@@ -34,6 +36,11 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         SettingsManager.syncAllToSharedFile()
         
         _ = calendarManager
+        
+        // 启动时强制刷新小组件时间线：重装/自动更新后 WidgetKit 可能仍持旧快照
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
@@ -105,6 +112,14 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: NSApplication.didResignActiveNotification, object: nil)
+        
+        NotificationCenter.default.addObserver(
+            forName: .closeEventEditWindow,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.eventEditWindow?.close()
+        }
     }
     
     private func updateAppearance() {
@@ -115,6 +130,11 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func renderStatus(_ status: StatusDisplayItem, on button: NSStatusBarButton) {
+        if status == lastRenderedStatus {
+            return
+        }
+        lastRenderedStatus = status
+        
         button.subviews.forEach { subview in
             if subview is DoubleLineStatusView {
                 subview.removeFromSuperview()
@@ -141,13 +161,12 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
             return
         }
         
-        let hasIcon = status.iconSymbolName != nil
         let hasText = !status.text.isEmpty
         
-        if hasIcon && hasText {
+        if let iconName = status.iconSymbolName, hasText {
             button.attributedTitle = NSAttributedString(string: "")
             button.title = status.text
-            button.image = createStatusImage(symbolName: status.iconSymbolName!, pointSize: 15.5)
+            button.image = createStatusImage(symbolName: iconName, pointSize: 15.5)
             button.imagePosition = .imageLeading
             self.statusItem.length = NSStatusItem.variableLength
         } else if let iconName = status.iconSymbolName {
@@ -174,26 +193,27 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
     }
     
     private func createStatusImage(symbolName: String, pointSize: CGFloat) -> NSImage? {
+        let cacheKey = "\(symbolName)-\(pointSize)"
+        if let cached = Self.statusImageCache[cacheKey] {
+            return cached
+        }
         let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
-        if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
-            image.isTemplate = true
-            return image
+        let image: NSImage?
+        if let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
+            symbolImage.isTemplate = true
+            image = symbolImage
         } else if let fallback = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calendar")?.withSymbolConfiguration(config) {
             fallback.isTemplate = true
-            return fallback
+            image = fallback
+        } else {
+            image = nil
         }
-        return nil
+        if let image = image {
+            Self.statusImageCache[cacheKey] = image
+        }
+        return image
     }
 
-    private func applyStatusIcon(to button: NSStatusBarButton) {
-        let day = Calendar.current.component(.day, from: Date())
-        let symbolName = (SettingsManager.displayMode == .dateIcon) ? "\(day).calendar" : "calendar"
-        button.title = ""
-        button.attributedTitle = NSAttributedString(string: "")
-        button.image = createStatusImage(symbolName: symbolName, pointSize: 18)
-        button.imagePosition = .imageOnly
-    }
-    
     @objc func statusItemClicked(sender: NSStatusBarButton) {
         handleStatusItemClick()
     }

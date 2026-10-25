@@ -57,7 +57,9 @@ struct EventListItemView: View {
         }
         .padding([.top,.bottom],2)
         .onTapGesture {
-            selectedEventId = event.id
+            if !event.isDaysIndicator {
+                selectedEventId = event.id
+            }
         }
         .popover(
             isPresented: Binding(

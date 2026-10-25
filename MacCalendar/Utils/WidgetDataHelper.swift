@@ -64,17 +64,6 @@ struct WidgetDataHelper {
         )
     }
     
-    static func getTodayInfo() -> WidgetCalendarDay? {
-        let data = getCalendarData()
-        return data.days.first { $0.isToday }
-    }
-    
-    static func getMonthTitle(date: Date) -> String {
-        let year = calendar.component(.year, from: date)
-        let month = calendar.component(.month, from: date)
-        return "\(year) / \(month)"
-    }
-    
     static func getWeekNumber(for date: Date, firstDayInWeek: FirstDayInWeek = .sunday) -> Int {
         let firstDayInt: Int = firstDayInWeek == .monday ? 2 : 1
         return CalendarGridHelper.calculateWeekOfYear(for: date, firstDayInWeek: firstDayInt)

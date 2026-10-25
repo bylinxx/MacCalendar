@@ -8,7 +8,7 @@
 import Foundation
 
 public class OffdayHelper {
-    private static var cache: [Int: OffdayDataResponse] = [:]
+    private static var cache: [Int: [String: Bool]] = [:]
     private static let formatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
@@ -20,10 +20,7 @@ public class OffdayHelper {
         let calendar = Calendar.current
         let year = calendar.component(.year, from: date)
         
-        let response: OffdayDataResponse
-        if let cached = cache[year] {
-            response = cached
-        } else {
+        if cache[year] == nil {
             let fileName = "\(year)"
             
             // 优先尝试从 data 目录读取
@@ -39,11 +36,16 @@ public class OffdayHelper {
                   let decoded = try? JSONDecoder().decode(OffdayDataResponse.self, from: data) else {
                 return nil
             }
-            cache[year] = decoded
-            response = decoded
+            
+            var index: [String: Bool] = [:]
+            index.reserveCapacity(decoded.days.count)
+            for item in decoded.days {
+                index[item.date] = item.isOffDay
+            }
+            cache[year] = index
         }
         
         let dateString = formatter.string(from: date)
-        return response.days.first(where: { $0.date == dateString })?.isOffDay
+        return cache[year]?[dateString]
     }
 }

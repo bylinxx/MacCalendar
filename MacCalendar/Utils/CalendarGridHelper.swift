@@ -28,10 +28,10 @@ struct CalendarGridHelper {
     
     static func generateDateGrid(for date: Date, firstDayInWeek: Int = 2) -> [Date]? {
         guard let monthInterval = calendar.dateInterval(of: .month, for: date) else { return nil }
+        guard let range = calendar.range(of: .day, in: .month, for: date) else { return nil }
         
         var gridDates: [Date] = []
         let firstDayOfMonth = monthInterval.start
-        let range = calendar.range(of: .day, in: .month, for: date)!
         
         let weekdayOfFirst = calendar.component(.weekday, from: firstDayOfMonth)
         let offset = (weekdayOfFirst - firstDayInWeek + 7) % 7
@@ -51,8 +51,7 @@ struct CalendarGridHelper {
         
         let totalDays = gridDates.count
         let remaining = totalDays % 7
-        if remaining > 0 {
-            let lastDay = gridDates.last!
+        if remaining > 0, let lastDay = gridDates.last {
             for i in 1...(7 - remaining) {
                 if let nextDay = calendar.date(byAdding: .day, value: i, to: lastDay) {
                     gridDates.append(nextDay)
@@ -66,18 +65,37 @@ struct CalendarGridHelper {
     static func calculateWeekOfYear(for date: Date?, firstDayInWeek: Int = 2) -> Int {
         guard let date = date else { return 0 }
         
+        return weekCalendar(firstDayInWeek: firstDayInWeek).component(.weekOfYear, from: date)
+    }
+    
+    private static var weekCalendarCache: [Int: Calendar] = [:]
+    
+    static func weekCalendar(firstDayInWeek: Int) -> Calendar {
+        if let cached = weekCalendarCache[firstDayInWeek] {
+            return cached
+        }
         var cal = Calendar(identifier: .gregorian)
         cal.locale = Locale.current
         cal.firstWeekday = firstDayInWeek
         cal.minimumDaysInFirstWeek = 1
-        
-        return cal.component(.weekOfYear, from: date)
+        weekCalendarCache[firstDayInWeek] = cal
+        return cal
     }
     
+    private static var dateFormatterCache: [String: DateFormatter] = [:]
+    
     static func formatDate(_ date: Date, format: String, localeIdentifier: String = "zh_CN") -> String {
+        let cacheKey = localeIdentifier + "|" + format
+        if let cached = dateFormatterCache[cacheKey] {
+            return cached.string(from: date)
+        }
         let formatter = DateFormatter()
         formatter.dateFormat = format
         formatter.locale = Locale(identifier: localeIdentifier)
+        if dateFormatterCache.count > 32 {
+            dateFormatterCache.removeAll()
+        }
+        dateFormatterCache[cacheKey] = formatter
         return formatter.string(from: date)
     }
     
@@ -95,7 +113,7 @@ struct CalendarGridHelper {
     }
     
     static func generateBasicCalendarData(for date: Date, firstDayInWeek: Int = 2, today: Date = Date()) -> [BasicCalendarDay] {
-        let lunarCalendar = Calendar(identifier: .chinese)
+        let lunarCalendar = LunarDateHelper.chineseCalendar
         
         guard let gridDates = generateDateGrid(for: date, firstDayInWeek: firstDayInWeek) else { return [] }
         

@@ -15,6 +15,8 @@ struct LunarDateHelper {
     static let lunarMonthSymbols = ["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"]
     static let lunarDaySymbols = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十", "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十", "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"]
     
+    static let chineseCalendar = Calendar(identifier: .chinese)
+    
     private static let yearFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .chinese)
@@ -38,16 +40,17 @@ struct LunarDateHelper {
      - Returns: 天干地支字符串，例如 "辛丑月"
      */
     static func getGanzhiMonth(for date: Date) -> String {
-        let chineseCalendar = Calendar(identifier: .chinese)
+        let chineseCalendar = LunarDateHelper.chineseCalendar
         let year = chineseCalendar.component(.year, from: date)
         let month = chineseCalendar.component(.month, from: date)
         
         guard month >= 1 && month <= 12 else { return "" }
         
-        // 月干支计算：年干 × 2 + 月数 = 月干（取尾数）
-        // 月支固定：(月数 + 1) % 12
+        // 月干支（五虎遁）：月干 = (年干序号 × 2 + 月数) % 10，序号按甲 = 1 起算；
+        // yearStemIndex 为 0 起算，故 +1 代入公式，结果 +9 转回 0 起算索引
         let yearStemIndex = (year - 1) % 10
-        let monthStemIndex = (yearStemIndex * 2 + month) % 10
+        let monthStemIndex = ((yearStemIndex + 1) * 2 + month + 9) % 10
+        // 月支固定：正月建寅，(月数 + 1) % 12
         let monthBranchIndex = (month + 1) % 12
         
         return heavenlyStems[monthStemIndex] + earthlyBranches[monthBranchIndex] + "月"
@@ -58,7 +61,7 @@ struct LunarDateHelper {
      - Returns: 农历月字符串,例如"正月"或"闰四月"
      */
     static func getLunarMonth(for date: Date) -> String {
-        let chineseCalendar = Calendar(identifier: .chinese)
+        let chineseCalendar = LunarDateHelper.chineseCalendar
         // 同时提取月份和是否为闰月的标识
         let components = chineseCalendar.dateComponents([.month, .isLeapMonth], from: date)
         
@@ -77,7 +80,7 @@ struct LunarDateHelper {
      - Returns: 农历日字符串，例如 "初一"
      */
     static func getLunarDay(for date: Date) -> String {
-        let chineseCalendar = Calendar(identifier: .chinese)
+        let chineseCalendar = LunarDateHelper.chineseCalendar
         let lunarDay = chineseCalendar.component(.day, from: date)
         guard lunarDay >= 1 && lunarDay <= 30 else { return "" }
         return lunarDaySymbols[lunarDay - 1]
@@ -89,7 +92,7 @@ struct LunarDateHelper {
      - Returns: 生肖字符串，例如 "龍"
      */
     static func getZodiac(for date: Date) -> String {
-        let chineseCalendar = Calendar(identifier: .chinese)
+        let chineseCalendar = LunarDateHelper.chineseCalendar
         let year = chineseCalendar.component(.year, from: date)
         
         // 地支计算公式：(年份 - 1) % 12

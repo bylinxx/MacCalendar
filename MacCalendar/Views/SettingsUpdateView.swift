@@ -134,7 +134,7 @@ struct SettingsUpdateView: View {
         case .checking: return "检查更新中..."
         case .noUpdate: return "已经是最新版本"
         case .downloading: return "正在下载..."
-        case .downloadComplete: return "下载完成"
+        case .downloadComplete: return "正在安装"
         case .error(let error): return "错误: \(error)"
         }
     }
@@ -166,7 +166,7 @@ struct SettingsUpdateView: View {
             DispatchQueue.main.async {
                 if let dmgURL = dmgURL {
                     self.updateStatus = .downloadComplete
-                    self.statusMessage = "正在挂载安装包..."
+                    self.statusMessage = "正在安装更新，应用将自动重启..."
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         self.installUpdate(from: dmgURL)
