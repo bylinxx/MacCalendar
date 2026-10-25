@@ -37,7 +37,6 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         
         _ = calendarManager
         
-        // 启动时强制刷新小组件时间线：重装/自动更新后 WidgetKit 可能仍持旧快照
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             WidgetCenter.shared.reloadAllTimelines()
         }

@@ -335,14 +335,20 @@ class UpdateManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
         fi
         log "替换完成"
         
-        # 4. 清除隔离属性，避免 Gatekeeper 拦截自动更新的新版本
+        # 4. 结束旧版 Widget 扩展进程：bundle 刚被整体替换，不重启会继续由持有旧代码（旧数据）的僵住进程渲染桌面组件
+        pkill -f "MacCalendarWidgetExtension.appex" 2>/dev/null || true
+        sleep 1
+        pkill -9 -f "MacCalendarWidgetExtension.appex" 2>/dev/null || true
+        log "已结束旧版 Widget 扩展进程"
+        
+        # 5. 清除隔离属性，避免 Gatekeeper 拦截自动更新的新版本
         xattr -dr com.apple.quarantine "$DEST" 2>/dev/null || true
         
-        # 5. 重启新版本
+        # 6. 重启新版本
         open "$DEST"
         log "已启动新版本"
         
-        # 6. 清理：卸载可能残留的 DMG 挂载，删除暂存目录
+        # 7. 清理：卸载可能残留的 DMG 挂载，删除暂存目录
         [ -n "$MOUNT_POINT" ] && hdiutil detach "$MOUNT_POINT" -force 2>/dev/null || true
         rm -rf "$(dirname "$STAGED_APP")"
         log "安装完成"
