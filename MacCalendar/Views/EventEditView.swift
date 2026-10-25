@@ -59,15 +59,20 @@ struct EventEditView: View {
                 HStack{
                     Image(systemName: "t.square").font(.title3).frame(width: 35)
                         .foregroundColor(.secondary)
-                    TextField("标题", text: $editedEvent.title,axis: .vertical)
+                    // HStack 内 axis: .vertical 字段会被按半行高裁切文字，必须用 frame 钉住高度
+                    TextField("标题", text: $editedEvent.title, axis: .vertical)
                         .textFieldStyle(.plain)
+                        .lineLimit(nil)
+                        .frame(minHeight: 44, maxHeight: 88, alignment: .topLeading)
                 }
                 
                 Divider()
                     .foregroundStyle(Color(hex: "cccccc"))
                 
                 rowItem("location", placeholder: "地点", content:
-                            TextField("地点", text: bindingFor(optionalString: $editedEvent.location),axis: .vertical)
+                            TextField("地点", text: bindingFor(optionalString: $editedEvent.location), axis: .vertical)
+                                .lineLimit(nil)
+                                .frame(minHeight: 44, maxHeight: 88, alignment: .topLeading)
                 )
                 
                 Divider()
@@ -107,6 +112,8 @@ struct EventEditView: View {
                 
                 rowItem("doc.text", placeholder: "备注", content:
                             TextField("备注", text: bindingFor(optionalString: $editedEvent.notes), axis: .vertical)
+                                .lineLimit(nil)
+                                .frame(minHeight: 60, maxHeight: 140, alignment: .topLeading)
                 )
             }
             .padding(10)
@@ -162,7 +169,7 @@ struct EventEditView: View {
             .padding(.horizontal)
             .padding(.bottom)
         }
-        .frame(width: 480, height: 450)
+        .frame(width: 480, height: 470)
         .navigationTitle("编辑日程")
         .alert("放弃修改", isPresented: $showingResetConfirmation) {
             Button("放弃", role: .destructive) {
