@@ -186,18 +186,21 @@ struct MacCalendarSmallWidgetView: View {
                         .foregroundColor(.primary.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                     
                     Text("\(LunarDateHelper.getGanzhiYear(for: today.date))(\(LunarDateHelper.getZodiac(for: today.date)))\(LunarDateHelper.getLunarMonth(for: today.date))\(LunarDateHelper.getLunarDay(for: today.date))")
                         .font(.system(size: 13))
                         .foregroundColor(.primary.opacity(0.6))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                 }
                 .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(0)
+        .contentMargins(.horizontal, 10)
     }
     
     private func weekdayChar(weekday: Int) -> String {
