@@ -317,7 +317,7 @@ class AppDelegate: NSObject,NSApplicationDelegate, NSWindowDelegate {
         )
         
         window.delegate = self
-        window.title = "编辑事件"
+        window.title = "编辑日程"
         window.center()
         window.isReleasedWhenClosed = false
         

@@ -55,44 +55,47 @@ struct EventEditView: View {
                 .background(Color.orange.opacity(0.12))
             }
             
-            VStack(alignment: .leading, spacing: 10) {
-                HStack{
-                    Image(systemName: "t.square").font(.title3).frame(width: 35)
-                        .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 0) {
+                formRow(icon: "t.square", topAligned: true) {
                     // HStack 内 axis: .vertical 字段会被按半行高裁切文字，必须用 frame 钉住高度
                     TextField("标题", text: $editedEvent.title, axis: .vertical)
                         .textFieldStyle(.plain)
                         .lineLimit(nil)
-                        .frame(minHeight: 44, maxHeight: 88, alignment: .topLeading)
+                        .frame(minHeight: 32, maxHeight: 88, alignment: .topLeading)
                 }
                 
-                Divider()
-                    .foregroundStyle(Color(hex: "cccccc"))
+                formDivider()
                 
-                rowItem("location", placeholder: "地点", content:
-                            TextField("地点", text: bindingFor(optionalString: $editedEvent.location), axis: .vertical)
-                                .lineLimit(nil)
-                                .frame(minHeight: 44, maxHeight: 88, alignment: .topLeading)
-                )
+                formRow(icon: "location", topAligned: true) {
+                    TextField("地点", text: bindingFor(optionalString: $editedEvent.location), axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .lineLimit(nil)
+                        .frame(minHeight: 32, maxHeight: 88, alignment: .topLeading)
+                }
                 
-                Divider()
-                    .foregroundStyle(Color(hex: "cccccc"))
+                formDivider()
                 
-                HStack {
-                    Image(systemName: "hourglass").font(.title3).frame(width: 35).foregroundColor(.secondary)
+                formRow(icon: "hourglass") {
                     Toggle("全天", isOn: $editedEvent.isAllDay.animation())
                 }
                 
-                Divider()
-                    .foregroundStyle(Color(hex: "cccccc"))
+                formDivider()
                 
-                HStack {
-                    Image(systemName: "clock").font(.title3).frame(width: 35).foregroundColor(.secondary)
-                    DatePicker("", selection: $editedEvent.startDate, displayedComponents: editedEvent.isAllDay ? .date : [.date, .hourAndMinute])
-                        .labelsHidden()
-                    Image(systemName: "arrow.right").foregroundColor(.secondary)
-                    DatePicker("", selection: $editedEvent.endDate, in: editedEvent.startDate..., displayedComponents: editedEvent.isAllDay ? .date : [.date, .hourAndMinute])
-                        .labelsHidden()
+                formRow(icon: "clock") {
+                    HStack(spacing: 6) {
+                        DatePicker("", selection: $editedEvent.startDate, displayedComponents: editedEvent.isAllDay ? .date : [.date, .hourAndMinute])
+                            .labelsHidden()
+                            .datePickerStyle(.stepperField)
+                            .fixedSize()
+                        Image(systemName: "arrow.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        DatePicker("", selection: $editedEvent.endDate, in: editedEvent.startDate..., displayedComponents: editedEvent.isAllDay ? .date : [.date, .hourAndMinute])
+                            .labelsHidden()
+                            .datePickerStyle(.stepperField)
+                            .fixedSize()
+                        Spacer(minLength: 0)
+                    }
                 }
                 .onChange(of: editedEvent.startDate) { _, newStartDate in
                     if newStartDate > editedEvent.endDate {
@@ -100,76 +103,76 @@ struct EventEditView: View {
                     }
                 }
                 
-                Divider()
-                    .foregroundStyle(Color(hex: "cccccc"))
+                formDivider()
                 
-                rowItem("link", placeholder: "URL", content:
-                            TextField("URL", text: bindingFor(optionalURL: $editedEvent.url))
-                )
+                formRow(icon: "link") {
+                    TextField("URL", text: bindingFor(optionalURL: $editedEvent.url))
+                        .textFieldStyle(.plain)
+                }
                 
-                Divider()
-                    .foregroundStyle(Color(hex: "cccccc"))
+                formDivider()
                 
-                rowItem("doc.text", placeholder: "备注", content:
-                            TextField("备注", text: bindingFor(optionalString: $editedEvent.notes), axis: .vertical)
-                                .lineLimit(nil)
-                                .frame(minHeight: 60, maxHeight: 140, alignment: .topLeading)
-                )
+                formRow(icon: "doc.text", topAligned: true) {
+                    TextField("备注", text: bindingFor(optionalString: $editedEvent.notes), axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .lineLimit(nil)
+                        .frame(minHeight: 72, maxHeight: 140, alignment: .topLeading)
+                }
             }
-            .padding(10)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
             .background(Color(hex: "#ccc").opacity(0.1))
-            .cornerRadius(8)
-            .padding()
+            .cornerRadius(10)
+            .padding([.horizontal, .top])
             
-            Spacer()
+            Spacer(minLength: 16)
             
-            VStack(spacing: 12) {
-                HStack{
-                    Button("重置"){
-                        showingResetConfirmation = true
+            HStack(spacing: 12) {
+                Button("重置"){
+                    showingResetConfirmation = true
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.gray)
+                .cornerRadius(10)
+                
+                Button("保存") {
+                    if editedEvent.allowsModify == false {
+                        self.alertInfo = AlertInfo(
+                            title: "无法保存",
+                            message: "此日程来自只读日历，不能修改。",
+                            onDismiss: nil
+                        )
+                        return
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.gray)
-                    .cornerRadius(10)
-                    
-                    Button("保存") {
-                        if editedEvent.allowsModify == false {
+                    Task {
+                        do {
+                            try await calendarManager.updateEvent(event: editedEvent)
                             self.alertInfo = AlertInfo(
-                                title: "无法保存",
-                                message: "此日程来自只读日历，不能修改。",
+                                title: "保存成功",
+                                message: "修改已成功保存。",
+                                onDismiss: {
+                                    NotificationCenter.default.post(name: .closeEventEditWindow, object: nil)
+                                }
+                            )
+                            
+                        } catch {
+                            self.alertInfo = AlertInfo(
+                                title: "保存失败",
+                                message: error.localizedDescription,
                                 onDismiss: nil
                             )
-                            return
-                        }
-                        Task {
-                            do {
-                                try await calendarManager.updateEvent(event: editedEvent)
-                                self.alertInfo = AlertInfo(
-                                    title: "保存成功",
-                                    message: "修改已成功保存。",
-                                    onDismiss: {
-                                        NotificationCenter.default.post(name: .closeEventEditWindow, object: nil)
-                                    }
-                                )
-                                
-                            } catch {
-                                self.alertInfo = AlertInfo(
-                                    title: "保存失败",
-                                    message: error.localizedDescription,
-                                    onDismiss: nil
-                                )
-                            }
                         }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-                    .cornerRadius(10)
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+                .cornerRadius(10)
+                .keyboardShortcut(.defaultAction)
             }
             .padding(.horizontal)
             .padding(.bottom)
         }
-        .frame(width: 480, height: 470)
+        .frame(width: 460, minHeight: 390)
         .navigationTitle("编辑日程")
         .alert("放弃修改", isPresented: $showingResetConfirmation) {
             Button("放弃", role: .destructive) {
@@ -199,10 +202,25 @@ struct EventEditView: View {
     }
     
     @ViewBuilder
-    private func rowItem<Content: View>(_ iconName: String, placeholder: String, content: Content) -> some View {
-        HStack {
-            Image(systemName: iconName).font(.title3).frame(width: 35).foregroundColor(.secondary)
-            content.textFieldStyle(.plain)
+    private func formDivider() -> some View {
+        Divider()
+            .foregroundStyle(Color.primary.opacity(0.12))
+    }
+    
+    @ViewBuilder
+    private func formRow<Content: View>(
+        icon: String,
+        topAligned: Bool = false,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(alignment: topAligned ? .top : .center, spacing: 10) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(.secondary)
+                .frame(width: 24)
+            content()
+                .frame(maxWidth: .infinity, alignment: topAligned ? .topLeading : .leading)
         }
+        .padding(.vertical, 5)
     }
 }
