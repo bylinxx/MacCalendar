@@ -54,6 +54,12 @@ struct SettingsCalendarView: View {
                                 await manager.requestAccessIfNeeded()
                                 await manager.loadCalendarInfo()
                                 updateAccessStatus()
+                                // accessory App 不会在系统弹窗关闭后自动拿回焦点
+                                NSApp.activate(ignoringOtherApps: true)
+                                if let app = NSApp.delegate as? AppDelegate {
+                                    app.settingsWindow?.makeKeyAndOrderFront(nil)
+                                    app.settingsWindow?.orderFrontRegardless()
+                                }
                             }
                         }) {
                             Text("请求权限")
