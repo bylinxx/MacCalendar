@@ -17,7 +17,9 @@ struct EventDetailView: View {
     @State private var deleteErrorMessage = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        // popover 内 alert 回调执行时机不确定，body 求值时捕获引用，避免闭包内再走环境查找
+        let manager = calendarManager
+        return VStack(alignment: .leading, spacing: 8) {
             Text(event.title)
                 .font(.headline)
                 .lineLimit(nil)
@@ -139,9 +141,6 @@ struct EventDetailView: View {
         .frame(width:350)
         .alert("确认删除", isPresented: $showingDeleteConfirmation) {
             Button("删除", role: .destructive) {
-                // Task 执行前视图可能已被销毁（popover 内 alert 关闭会连带销毁本视图），
-                // 那时再读 @EnvironmentObject 会触发 EnvironmentObject.error() 崩溃
-                let manager = calendarManager
                 Task {
                     do {
                         try await manager.deleteEvent(withId: event.id)

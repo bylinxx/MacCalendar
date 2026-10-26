@@ -49,7 +49,8 @@ struct EventEditView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        let manager = calendarManager
+        return VStack(spacing: 0) {
             if editedEvent.allowsModify == false {
                 HStack(spacing: 6) {
                     Image(systemName: "lock.fill")
@@ -149,7 +150,6 @@ struct EventEditView: View {
                         )
                         return
                     }
-                    let manager = calendarManager
                     Task {
                         do {
                             try await manager.updateEvent(event: editedEvent)

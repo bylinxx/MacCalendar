@@ -14,7 +14,8 @@ struct SettingsCalendarView: View {
     @State private var isAccessNotDetermined = false
     
     var body: some View {
-        Form {
+        let manager = calendarManager
+        return Form {
             if isAccessDenied {
                 Section {
                     VStack(alignment: .center, spacing: 16) {
@@ -49,7 +50,6 @@ struct SettingsCalendarView: View {
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                         Button(action: {
-                            let manager = calendarManager
                             Task {
                                 await manager.requestAccessIfNeeded()
                                 await manager.loadCalendarInfo()

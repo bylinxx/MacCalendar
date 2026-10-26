@@ -21,6 +21,8 @@ struct ContentView: View {
         .frame(width: SettingsManager.showWeekNumber ? 332 : 310)
         .padding()
         .fixedSize()
+        // popover 内的 EventDetailView 依赖环境注入；不注入则首次访问即 fatal
+        .environmentObject(calendarManager)
         .overlay(
             GeometryReader{ proxy in
                 Color.clear
