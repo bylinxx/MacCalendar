@@ -149,9 +149,10 @@ struct EventEditView: View {
                         )
                         return
                     }
+                    let manager = calendarManager
                     Task {
                         do {
-                            try await calendarManager.updateEvent(event: editedEvent)
+                            try await manager.updateEvent(event: editedEvent)
                             self.alertInfo = AlertInfo(
                                 title: "保存成功",
                                 message: "修改已成功保存。",

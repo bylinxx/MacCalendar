@@ -139,9 +139,12 @@ struct EventDetailView: View {
         .frame(width:350)
         .alert("确认删除", isPresented: $showingDeleteConfirmation) {
             Button("删除", role: .destructive) {
+                // Task 执行前视图可能已被销毁（popover 内 alert 关闭会连带销毁本视图），
+                // 那时再读 @EnvironmentObject 会触发 EnvironmentObject.error() 崩溃
+                let manager = calendarManager
                 Task {
                     do {
-                        try await calendarManager.deleteEvent(withId: event.id)
+                        try await manager.deleteEvent(withId: event.id)
                     } catch {
                         deleteErrorMessage = error.localizedDescription
                         showingDeleteError = true

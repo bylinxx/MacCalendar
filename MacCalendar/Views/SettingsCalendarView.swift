@@ -49,9 +49,10 @@ struct SettingsCalendarView: View {
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                         Button(action: {
+                            let manager = calendarManager
                             Task {
-                                await calendarManager.requestAccessIfNeeded()
-                                await calendarManager.loadCalendarInfo()
+                                await manager.requestAccessIfNeeded()
+                                await manager.loadCalendarInfo()
                                 updateAccessStatus()
                             }
                         }) {
