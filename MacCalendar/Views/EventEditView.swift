@@ -21,6 +21,14 @@ struct EventEditView: View {
     @State private var alertInfo: AlertInfo?
     @State private var showingResetConfirmation = false
     
+    private static let cardBackground = Color(nsColor: .underPageBackgroundColor)
+    // 浅色下 12% 黑几乎不可见，需比深色更高对比，否则各行糊成一片
+    private static let rowSeparator = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(white: 1, alpha: 0.12)
+            : NSColor(white: 0, alpha: 0.18)
+    })
+    
     init(event: CalendarEvent) {
         self.event = event
         self._editedEvent = State(initialValue: event)
@@ -56,21 +64,17 @@ struct EventEditView: View {
             }
             
             VStack(alignment: .leading, spacing: 0) {
-                formRow(icon: "t.square", topAligned: true) {
-                    // HStack 内 axis: .vertical 字段会被按半行高裁切文字，必须用 frame 钉住高度
-                    TextField("标题", text: $editedEvent.title, axis: .vertical)
+                formRow(icon: "t.square") {
+                    TextField("标题", text: $editedEvent.title)
                         .textFieldStyle(.plain)
-                        .lineLimit(nil)
-                        .frame(minHeight: 32, maxHeight: 88, alignment: .topLeading)
+                        .font(.system(size: 15, weight: .medium))
                 }
                 
                 formDivider()
                 
-                formRow(icon: "location", topAligned: true) {
-                    TextField("地点", text: bindingFor(optionalString: $editedEvent.location), axis: .vertical)
+                formRow(icon: "location") {
+                    TextField("地点", text: bindingFor(optionalString: $editedEvent.location))
                         .textFieldStyle(.plain)
-                        .lineLimit(nil)
-                        .frame(minHeight: 32, maxHeight: 88, alignment: .topLeading)
                 }
                 
                 formDivider()
@@ -113,15 +117,16 @@ struct EventEditView: View {
                 formDivider()
                 
                 formRow(icon: "doc.text", topAligned: true) {
+                    // HStack 内 axis: .vertical 字段会被按半行高裁切文字，必须用 frame 钉住高度
                     TextField("备注", text: bindingFor(optionalString: $editedEvent.notes), axis: .vertical)
                         .textFieldStyle(.plain)
                         .lineLimit(nil)
-                        .frame(minHeight: 72, maxHeight: 140, alignment: .topLeading)
+                        .frame(height: 86, alignment: .topLeading)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(Color(hex: "#ccc").opacity(0.1))
+            .background(Self.cardBackground)
             .cornerRadius(10)
             .padding([.horizontal, .top])
             
@@ -172,7 +177,7 @@ struct EventEditView: View {
             .padding(.horizontal)
             .padding(.bottom)
         }
-        .frame(width: 460, minHeight: 390)
+        .frame(minWidth: 460, idealWidth: 460, maxWidth: 460, minHeight: 395)
         .navigationTitle("编辑日程")
         .alert("放弃修改", isPresented: $showingResetConfirmation) {
             Button("放弃", role: .destructive) {
@@ -204,7 +209,8 @@ struct EventEditView: View {
     @ViewBuilder
     private func formDivider() -> some View {
         Divider()
-            .foregroundStyle(Color.primary.opacity(0.12))
+            .foregroundStyle(Self.rowSeparator)
+            .padding(.leading, 34)
     }
     
     @ViewBuilder
@@ -220,7 +226,8 @@ struct EventEditView: View {
                 .frame(width: 24)
             content()
                 .frame(maxWidth: .infinity, alignment: topAligned ? .topLeading : .leading)
+                .frame(height: topAligned ? nil : 24)
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, 8)
     }
 }
