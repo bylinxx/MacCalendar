@@ -10,24 +10,30 @@ import ServiceManagement
 
 struct LaunchAtLoginManager {
 
-    /// 设置 App 是否在登录时启动
-    /// - Parameter enabled: true 表示注册为登录项, false 表示注销
-    static func setLaunchAtLogin(enabled: Bool) {
-        Task { @MainActor in
-            do {
-                if enabled {
-                    try SMAppService.mainApp.register()
-                } else {
-                    try SMAppService.mainApp.unregister()
-                }
-            } catch {
+    static var status: SMAppService.Status {
+        SMAppService.mainApp.status
+    }
+
+    static var isLaunchAtLoginEnabled: Bool {
+        status == .enabled
+    }
+
+    /// 返回 false 表示系统拒绝了这次变更，调用方需回读 status 纠正 UI
+    @discardableResult
+    static func setLaunchAtLogin(enabled: Bool) -> Bool {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
             }
+            return true
+        } catch {
+            return false
         }
     }
 
-    /// 检查 App 当前是否被设置为登录时启动
-    /// - Returns: 如果是登录项则返回 true，否则返回 false
-    static func isLaunchAtLoginEnabled() -> Bool {
-        return SMAppService.mainApp.status == .enabled
+    static func openSystemSettingsLoginItems() {
+        SMAppService.openSystemSettingsLoginItems()
     }
 }
