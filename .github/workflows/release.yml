@@ -66,14 +66,18 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      # 6. 编译 SwiftUI 应用程序
+      # 6. 编译 SwiftUI 应用程序（通用二进制：Apple Silicon + Intel）
+      #    必须用 generic destination + 显式 ARCHS：具体 destination 会把 ARCHS 收窄成本机架构，
+      #    而 ARCHS_STANDARD 未来也可能移除 x86_64，两者任缺其一都会静默产出单架构包
       - name: Build SwiftUI App
         run: |
           xcodebuild clean build \
             -project "MacCalendar.xcodeproj" \
             -scheme "MacCalendar" \
             -configuration Release \
-            -destination 'platform=macOS' \
+            -destination 'generic/platform=macOS' \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=YES \
@@ -82,11 +86,34 @@ jobs:
             SYMROOT=$(pwd)/build \
             OBJROOT=$(pwd)/build
 
-      # 7. 安装打包工具 create-dmg
+      # 7. 校验架构：主程序与 Widget 扩展都必须同时含 arm64 和 x86_64，任一缺失直接失败，避免发出单架构包
+      - name: Verify Universal Binary
+        run: |
+          APP_BIN="build/Release/MacCalendar.app/Contents/MacOS/MacCalendar"
+          WIDGET_BIN="build/Release/MacCalendar.app/Contents/PlugIns/MacCalendarWidgetExtension.appex/Contents/MacOS/MacCalendarWidgetExtension"
+          FAILED=0
+          for BIN in "$APP_BIN" "$WIDGET_BIN"; do
+            if [ ! -f "$BIN" ]; then
+              echo "::error::二进制不存在: $BIN"
+              FAILED=1
+              continue
+            fi
+            FOUND=$(lipo -archs "$BIN")
+            echo "$BIN -> $FOUND"
+            for ARCH in arm64 x86_64; do
+              case " $FOUND " in
+                *" $ARCH "*) ;;
+                *) echo "::error::缺少 $ARCH 架构: $BIN"; FAILED=1 ;;
+              esac
+            done
+          done
+          [ "$FAILED" -eq 0 ] || exit 1
+
+      # 8. 安装打包工具 create-dmg
       - name: Install create-dmg
         run: brew install create-dmg
 
-      # 8. 打包成 DMG 文件
+      # 9. 打包成 DMG 文件
       - name: Create DMG package
         run: |
           mkdir -p dmg_source
@@ -103,14 +130,14 @@ jobs:
             "MacCalendar.dmg" \
             "dmg_source/"
 
-      # 9. 创建 GitHub Release 并上传 DMG
+      # 10. 创建 GitHub Release 并上传 DMG
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: MacCalendar.dmg
           tag_name: ${{ steps.tag_version.outputs.new_tag }}
           name: "Release ${{ steps.tag_version.outputs.new_tag }}"
-          body: "此版本由 GitHub Actions 自动编译和发布。\n\n包含的更新:\n${{ steps.tag_version.outputs.changelog }}"
+          body: "此版本由 GitHub Actions 自动编译和发布。\n\n通用二进制，同时支持 Apple Silicon 与 Intel 处理器。\n\n包含的更新:\n${{ steps.tag_version.outputs.changelog }}"
           draft: false
           prerelease: false
         env:
