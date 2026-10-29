@@ -15,6 +15,7 @@
 > - 读取系统日历数据，可按类型筛选显示，支持修改和删除
 > - 自定义菜单栏显示内容，支持图标/日期/时间/自定义格式
 > - 输入年/月快捷跳转
+> - 支持Widget小组件，提供大中小三种不同尺寸
 
 
 ## 安装
@@ -31,18 +32,12 @@
 > 若上述命令执行后仍无法打开，请前往 **系统设置 → 隐私与安全性**，在"安全性"栏点击 **"仍要打开"**。
 
 > [!NOTE]
-> - **手动安装**
 >   1. 从 [GitHub Releases](https://github.com/bylinxx/MacCalendar/releases/latest) 下载最新版本 dmg 格式的镜像
 >   2. 双击打开下载的 dmg 镜像
 >   3. 拖动 MacCalendar 图标到 Applications 图标完成安装
 >   4. 安装完成后，请在终端执行 `xattr -cr /Applications/MacCalendar.app` 解除系统隔离
 >   5. 首次启动 App 后，打开"系统设置 → 桌面与程序坞 → 小组件"，将 MacCalendar 小组件添加到桌面
 >   6. 如何更新？偏好设置->检查更新
-> - **homebrew安装**
->   1. 在命令行执行 `brew tap bylinxx/tap` 引入 tap
->   2. 在命令行执行 `brew install maccalendar` 完成安装
->   3. 安装完成后，请在终端执行 `xattr -cr /Applications/MacCalendar.app` 解除系统隔离
->   4. 如何更新？偏好设置->检查更新
 
 ## 支持开发
 
