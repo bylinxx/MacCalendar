@@ -18,6 +18,17 @@ struct SettingsIconView: View {
     @AppStorage("showWeekNumber", store: SettingsManager.sharedDefaults) private var showWeekNumber: Bool = SettingsManager.showWeekNumber
     @AppStorage("showDaysIndicator", store: SettingsManager.sharedDefaults) private var showDaysIndicator: Bool = SettingsManager.showDaysIndicator
     @AppStorage("appearanceMode", store: SettingsManager.sharedDefaults) private var appearanceMode: AppearanceMode = SettingsManager.appearanceMode
+    @AppStorage("customFormatLocale", store: SettingsManager.sharedDefaults) private var customFormatLocale: FormatLocale = SettingsManager.customFormatLocale
+
+    private var formatCodeHint: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，dd(补零日)，ddd(序数日 1st)，E/EEE(星期缩写)，EEEE(星期全称)，HH(24时)，h(12时)，m(分)，s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
+            Text("格式语言选 English 显示 Nov 1 Sun 13:35:10；跟随系统在中文环境显示 11月 1 周日 13:35:10。")
+        }
+        .font(.caption)
+        .foregroundColor(.secondary)
+        .lineLimit(nil)
+    }
 
     private var isCustomMode: Bool {
         switch displayMode {
@@ -85,16 +96,20 @@ struct SettingsIconView: View {
 
             if isCustomMode {
                 Section {
+                    Picker("格式语言", selection: $customFormatLocale) {
+                        ForEach(FormatLocale.allCases) { locale in
+                            Text(locale.displayName).tag(locale)
+                        }
+                    }
+                    .pickerStyle(.radioGroup)
+
                     Toggle("双行显示", isOn: doubleLineBinding)
                     
                     if enableDoubleLine {
                         TextField("上行格式", text: $doubleLineTopFormat)
                         TextField("下行格式", text: $doubleLineBottomFormat)
                         
-                        Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(nil)
+                        formatCodeHint
                     } else {
                         Picker("显示图标", selection: customIconOptionBinding) {
                             Text("默认图标").tag(IconDisplayOption.defaultIcon)
@@ -105,10 +120,7 @@ struct SettingsIconView: View {
                         
                         TextField("输入自定义格式", text: $customFormatString)
                         
-                        Text("格式化代码参考: yyyy(年)，MM(月)，d(日)，E(星期)，HH(24时)，h(12时)，m(分), s(秒)，a(上午/下午)，w(周数)，gy(干支年)，gm(干支月)，lm(农历月)，ld(农历日)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(nil)
+                        formatCodeHint
                     }
                 }
             }

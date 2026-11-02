@@ -22,6 +22,7 @@ class CalendarIcon: ObservableObject {
     
     private var timer: Timer?
     private let dateFormatter = DateFormatter()
+    private let customFormatDateFormatter = DateFormatter()
     private var cancellables = Set<AnyCancellable>()
     
     init() {
@@ -190,9 +191,11 @@ class CalendarIcon: ObservableObject {
             .replacingOccurrences(of: "ww", with: placeholderWK)
             .replacingOccurrences(of: "w", with: placeholderWK)
         
-        dateFormatter.dateFormat = processedFormat
+        customFormatDateFormatter.calendar = Calendar.autoupdatingCurrent
+        customFormatDateFormatter.locale = SettingsManager.customFormatLocale.locale ?? Locale.autoupdatingCurrent
+        customFormatDateFormatter.dateFormat = processedFormat
         
-        var result = dateFormatter.string(from: date)
+        var result = customFormatDateFormatter.string(from: date)
                 
         if hasWeek {
             let calendar = DateHelper.gregorianCalendar(mondayFirst: SettingsManager.firstDayInWeek == .monday)

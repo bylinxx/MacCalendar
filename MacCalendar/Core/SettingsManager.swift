@@ -71,6 +71,27 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum FormatLocale: String, CaseIterable, Identifiable {
+    case system
+    case english
+    
+    var id: Self { self }
+    
+    var displayName: String {
+        switch self {
+        case .system: return "跟随系统"
+        case .english: return "English"
+        }
+    }
+    
+    var locale: Locale? {
+        switch self {
+        case .system: return nil
+        case .english: return Locale(identifier: "en_US_POSIX")
+        }
+    }
+}
+
 struct SettingsManager {
     
     static let widgetBundleID = "Lin.MacCalendar.MacCalendarWidget"
@@ -204,4 +225,5 @@ struct SettingsManager {
     @AppStorage("updateCheckFrequency", store: sharedDefaults) static var updateCheckFrequency: UpdateCheckFrequency = .weekly
     @AppStorage("showDaysIndicator", store: sharedDefaults) static var showDaysIndicator = true
     @AppStorage("appearanceMode", store: sharedDefaults) static var appearanceMode: AppearanceMode = .system
+    @AppStorage("customFormatLocale", store: sharedDefaults) static var customFormatLocale: FormatLocale = .system
 }
